@@ -7,15 +7,13 @@ const REFRESH_INTERVAL = 10 * 1000;
 // Function to fetch stream information
 export const fetchStreamInfo = async (streamName) => {
   try {
-    const response = await fetch(`/api/v1/streams`);
+    const response = await fetch(`/api/v1/streams/${streamName}/stats`);
     if (!response.ok) {
       throw new Error("Error loading stream information");
     }
     
     const data = await response.json();
-    const currentStream = data.find(stream => stream.streamName === streamName);
-    
-    return currentStream || null;
+    return data || null;
   } catch (err) {
     console.error("Error fetching stream information:", err);
     return null;

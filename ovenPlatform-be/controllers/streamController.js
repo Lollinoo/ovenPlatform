@@ -3,6 +3,14 @@ const base64url = require("base64url");
 const crypto = require("crypto");
 const config = require("../config");
 const { validateStreamName } = require("../utils/validators");
+const axios = require('axios');
+
+// Axios configuration for OvenMediaEngine (copied from omeService.js for direct API calls)
+const omeAxios = axios.create({
+  baseURL: `${config.ome.protocol}://${config.ome.host}:${config.ome.port}`,
+  auth: config.ome.auth,
+  timeout: config.ome.requestTimeout,
+});
 
 class StreamController {
   /**
@@ -124,6 +132,85 @@ class StreamController {
     }
   }
 
+  /**
+   * Gets a list of all active streams directly from the OME API.
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getAllActiveStreams(req, res) {
+    try {
+      const activeStreamNames = await omeService.getActiveStreamNames();
+      res.json(activeStreamNames);
+    } catch (error) {
+      console.error("Error in StreamController.getAllActiveStreams:", error.message);
+      const statusCode = error.response?.status || 500;
+      const responseMessage = error.isAxiosError 
+        ? (error.response?.data?.message || error.message) 
+        : "Internal server error";
+      res.status(statusCode).json({
+        code: 'FETCH_STREAMS_ERROR',
+        message: responseMessage
+      });
+    }
+  }
+
+  /**
+   * Gets detailed information for a specific stream from the OME API.
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getStreamInfo(req, res) {
+    try {
+      const { streamName } = req.params;
+      
+      // Basic presence check
+      if (!streamName || typeof streamName !== 'string' || streamName.trim() === '') {
+        return res.status(400).json({
+          code: 'MISSING_STREAM_NAME',
+          message: "'streamName' URL parameter is required and must be a non-empty string."
+        });
+      }
+
+      // Comprehensive validation with specific rules
+      const validation = validateStreamName(streamName);
+      if (!validation.isValid) {
+        return res.status(validation.error.status).json({
+          code: validation.error.code,
+          message: validation.error.message
+        });
+      }
+
+      try {
+        // Make a direct call to the OME API to get stream information
+        const streamInfo = await omeAxios.get(
+          `/v1/stats/current/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${streamName.trim()}`
+        );
+        
+        res.json({
+          createdTime: streamInfo.data.response.createdTime,
+          totalConnections: streamInfo.data.response.totalConnections
+        } || {});
+      } catch (error) {
+        if (error.response && error.response.status === 404) {
+          return res.status(404).json({
+            code: 'STREAM_NOT_FOUND',
+            message: `Stream with name "${streamName}" not found.`
+          });
+        }
+        throw error; // Pass other errors to the catch block below
+      }
+    } catch (error) {
+      console.error(`Error in StreamController.getStreamInfo for ${req.params.streamName}:`, error.message);
+      const statusCode = error.response?.status || 500;
+      const responseMessage = error.isAxiosError 
+        ? (error.response?.data?.message || error.message) 
+        : "Internal server error";
+      res.status(statusCode).json({
+        code: 'FETCH_STREAM_INFO_ERROR',
+        message: responseMessage
+      });
+    }
+  }
   /**
    * Gets the thumbnail for a specific stream.
    * @param {Object} req - Request object

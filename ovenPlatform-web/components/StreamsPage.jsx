@@ -250,8 +250,9 @@ function StreamsPage() {
                   </div>
                   
                   <div className="stream-detail-item">
-                    <span className="detail-label">Average bitrate:</span>
-                    <span className="detail-value">{((stream.avgThroughputIn || 0) / 1_000_000).toFixed(2)} Mbps</span>
+                    <span className="detail-label">Resolution:</span>
+                    <span className="detail-value">{((stream.videoWidth))} x {((stream.videoHeight))} - {((stream.videoBitrate) / 1_000_000).toFixed(2)}Mbps</span>
+                    {/* <span className="detail-value">{((stream.avgThroughputIn || 0) / 1_000_000).toFixed(2)} Mbps</span> */}
                   </div>
 {/*                   
                   <div className="stream-detail-item">

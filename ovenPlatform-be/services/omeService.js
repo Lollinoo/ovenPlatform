@@ -1,6 +1,5 @@
 const axios = require('axios');
 const config = require('../config');
-
 // Axios configuration for OvenMediaEngine
 const omeAxios = axios.create({
   baseURL: `${config.ome.protocol}://${config.ome.host}:${config.ome.port}`,
@@ -10,37 +9,84 @@ const omeAxios = axios.create({
 
 class OmeService {
   /**
+   * Gets the list of active stream names.
+   * @returns {Promise<Array<string>>} Array of active stream names.
+   */
+  async getActiveStreamNames() {
+    try {
+      const streamsResponse = await omeAxios.get(
+        `/v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams`
+      );
+      // The response might contain { "response": ["stream1", "stream2"], "status": 200 }
+      // or { "response": [], "status": 200 } if there are no streams.
+      // Ensure that response.data.response is an array, otherwise return an empty array.
+      return Array.isArray(streamsResponse?.data?.response) ? streamsResponse.data.response : [];
+    } catch (error) {
+      // If the endpoint returns 404 (e.g., if the app doesn't exist),
+      // it could be handled here or considered as "no active streams".
+      // For now, log the error and return an empty array for robustness.
+      console.error('Error fetching active stream names:', error.message);
+      if (error.response && error.response.status === 404) {
+        console.warn(`OME app or vhost not found: /v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams`);
+        return []; // App/vhost not found, so no streams
+      }
+      // For other errors, we might still want to return an empty array or re-throw
+      throw error; // Re-throw for other errors to be caught by controller
+    }
+  }
+  
+  /**
    * Gets the list of active streams with their statistics.
    * @returns {Promise<Array>} Array of streams with statistics.
    */
   async getStreamWithStats() {
     try {
       // 1. Get the list of streams
-      const streamsResponse = await omeAxios.get(
-        `/v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams`
-      );
-      // Ensure response.data and response.data.response exist and response.data.response is an array
-      const streamNames = Array.isArray(streamsResponse?.data?.response) ? streamsResponse.data.response : [];
+      const streamsResponse = await this.getActiveStreamNames();
+      console.log("Active streams:", streamsResponse);
 
-      if (streamNames.length === 0) {
+      if (streamsResponse.length === 0) {
         return []; // No active streams
       }
 
       // 2. For each stream, get the details
-      const streamDetailsPromises = streamNames.map(async (streamName) => {
+      const streamDetailsPromises = streamsResponse.map(async (streamName) => {
         try {
           const statsResponse = await omeAxios.get(
+            `/v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${streamName}`
+          );
+          const  liveStatsResponse = await omeAxios.get(
             `/v1/stats/current/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${streamName}`
           );
-          // Ensure statsResponse.data and statsResponse.data.response exist
+          
+          
+          // Extract base response data
+          const statsResponseData = statsResponse?.data?.response || {};
+          const liveStatsResponseData = liveStatsResponse?.data?.response || {};
+          
+          // Extract video information from input.tracks if available
+          let videoInfo = {};
+          if (statsResponseData.input && statsResponseData.input.tracks && statsResponseData.input.tracks.length > 0) {
+            // Look for the first track with video information
+            for (const track of statsResponseData.input.tracks) {
+              if (track.video) {
+                videoInfo = {
+                  videoWidth: track.video.width,
+                  videoHeight: track.video.height, 
+                  videoBitrate: track.video.bitrate,
+                  videoFramerate: track.video.framerate
+                };
+                break;
+              }
+            }
+          }
+          
+          // Construct the response with stream name, creation time, and video details
           return {
             streamName,
-            // stats: statsResponse.data.response || {}, // Assuming response is an object
-            avgThroughputIn: statsResponse?.data?.response.avgThroughputIn || "", // Use optional chaining to avoid errors
-            createdTime: statsResponse?.data?.response.createdTime || "", // Use optional chaining to avoid errors
-            totalConnections: statsResponse?.data?.response.totalConnections || 0, // Use optional chaining to avoid errors
-            
-            // ...(statsResponse?.data?.response || {}), // Spread an empty object if response is not as expected
+            createdTime: statsResponseData.input?.createdTime || statsResponseData.createdTime || "",
+            totalConnections: liveStatsResponseData.totalConnections || 0,
+            ...videoInfo,
           };
         } catch (error) {
           console.error(`Error fetching stats for stream ${streamName}:`, error.message);
@@ -69,32 +115,6 @@ class OmeService {
     }
   }
 
-  /**
-   * Gets the list of active stream names.
-   * @returns {Promise<Array<string>>} Array of active stream names.
-   */
-  async getActiveStreamNames() {
-    try {
-      const streamsResponse = await omeAxios.get(
-        `/v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams`
-      );
-      // The response might contain { "response": ["stream1", "stream2"], "status": 200 }
-      // or { "response": [], "status": 200 } if there are no streams.
-      // Ensure that response.data.response is an array, otherwise return an empty array.
-      return Array.isArray(streamsResponse?.data?.response) ? streamsResponse.data.response : [];
-    } catch (error) {
-      // If the endpoint returns 404 (e.g., if the app doesn't exist),
-      // it could be handled here or considered as "no active streams".
-      // For now, log the error and return an empty array for robustness.
-      console.error('Error fetching active stream names:', error.message);
-      if (error.response && error.response.status === 404) {
-        console.warn(`OME app or vhost not found: /v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams`);
-        return []; // App/vhost not found, so no streams
-      }
-      // For other errors, we might still want to return an empty array or re-throw
-      throw error; // Re-throw for other errors to be caught by controller
-    }
-  }
 
   /**
    * Checks if a stream name is already in use.
