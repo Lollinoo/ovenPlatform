@@ -46,25 +46,24 @@ p {
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  position: relative;
 }
 
-/* Aggiungo spazio per il contenuto sotto la navbar */
 .content-container {
-  margin-top: 64px;
   flex: 1;
-  display: flex;
-  flex-direction: column;
-}
-
-.content {
-  flex: 1;
-  padding-top: 50px; /* Altezza della navbar */
+  padding: var(--spacing-md);
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  margin-top: 64px; /* Spazio per la navbar */
+  margin-bottom: 80px; /* Spazio per il footer */
 }
 
 /* Responsive adjustments */
 @media (max-width: 768px) {
   .content-container {
-    margin-top: 64px;
+    padding: var(--spacing-sm);
+    margin-bottom: 100px; /* Aumenta lo spazio per il footer su mobile */
   }
 }
 

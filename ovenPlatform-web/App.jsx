@@ -2,6 +2,7 @@
 // Configures the application's navigation structure with conditional routes based on environment
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+import Footer from './components/Footer';
 import StreamsPage from './components/StreamsPage';
 import PlayerPage from './components/PlayerPage';
 import EnvDebugger from './components/EnvDebugger';
@@ -23,6 +24,7 @@ function App() {
             )}
           </Routes>
         </div>
+        <Footer />
       </div>
     </Router>
   );
