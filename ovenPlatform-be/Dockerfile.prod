@@ -6,4 +6,4 @@ RUN npm ci --only=production
 COPY . .
 # Set NODE_ENV to production
 ENV NODE_ENV=production
-CMD ["npm", "start"]
+CMD ["npm", "run", "start:prod"]

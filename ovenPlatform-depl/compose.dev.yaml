@@ -1,0 +1,42 @@
+services:
+  oven-backend:
+    build:
+      context: ../ovenPlatform-be
+      dockerfile: Dockerfile.dev
+    image: oven-backend-dev:1.0.0
+    container_name: oven-backend-dev
+    ports:
+      - "4000:3000"
+    volumes:
+      - ../ovenPlatform-be:/app
+      - ../ovenPlatform-be/node_modules:/app/node_modules
+    networks:
+      - ovendev-net
+
+  oven-frontend:
+    build:
+      context: ../ovenPlatform-web
+      dockerfile: Dockerfile.dev
+    image: oven-frontend-dev:1.0.0
+    container_name: oven-frontend-dev
+    ports:
+      - "4001:8080"
+    volumes:
+      - ../ovenPlatform-web:/app
+      - ../ovenPlatform-web/node_modules:/app/node_modules
+    environment:
+      - NODE_ENV=development
+      # - VITE_API_URL=http://custom-api:3000
+    env_file:
+      - ../ovenPlatform-web/.env
+      - ../ovenPlatform-web/.env.development
+    networks:
+      - ovendev-net
+  
+networks:
+  ovendev-net:
+    name: oven-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.40.20.0/27

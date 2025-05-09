@@ -9,7 +9,7 @@ services:
       - "8080:8080"
     volumes:
       - ./:/app
-      - ./node_modules:/app/node_modules
+      - /app/node_modules # Volume anonimo per preservare node_modules
     environment:
       - NODE_ENV=development
       # - VITE_API_URL=http://custom-api:3000

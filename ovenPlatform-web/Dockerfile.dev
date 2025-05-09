@@ -1,8 +1,16 @@
 FROM node:22.15.0-alpine3.20
 WORKDIR /app
+
+# Copia package.json e package-lock.json
 COPY package.json package-lock.json* ./
 ENV NODE_ENV=development
+
+# Installa le dipendenze
 RUN npm install
-COPY . .
+
+# Espone la porta di sviluppo
 EXPOSE 8080
+
+# Il codice sorgente verrà montato come volume
+# Non copiamo i file sorgenti qui per evitare di sovrascrivere node_modules
 CMD ["npm", "run", "dev"]
