@@ -1,0 +1,455 @@
+/* Modal stile Twitch con effetti moderni */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: var(--z-index-modal);
+  backdrop-filter: blur(5px);
+  animation: overlayFadeIn 0.3s ease;
+}
+
+@keyframes overlayFadeIn {
+  from {
+    background-color: rgba(0, 0, 0, 0);
+    backdrop-filter: blur(0px);
+  }
+  to {
+    background-color: rgba(0, 0, 0, 0.85);
+    backdrop-filter: blur(5px);
+  }
+}
+
+.modal-content {
+  background-color: var(--color-background-alt);
+  border-radius: var(--border-radius-medium);
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 0 30px rgba(145, 71, 255, 0.2);
+  animation: modalScaleIn 0.4s cubic-bezier(0.19, 1, 0.22, 1);
+  border: 1px solid rgba(145, 71, 255, 0.2);
+  position: relative;
+}
+
+@keyframes modalScaleIn {
+  from {
+    opacity: 0;
+    transform: scale(0.96) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: var(--color-background-alt);
+  border-radius: 0 var(--border-radius-medium) var(--border-radius-medium) 0;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: var(--color-background-light);
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--spacing-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: var(--color-text);
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+.close-modal-button {
+  background: transparent;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  transition: background-color var(--transition-fast), color var(--transition-fast);
+}
+
+.close-modal-button:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text);
+}
+
+.encoder-info {
+  padding: var(--spacing-md);
+  background-color: var(--color-background-light);
+  margin: 0 var(--spacing-md) var(--spacing-md);
+  border-radius: var(--border-radius-small);
+}
+
+.encoder-info h3 {
+  margin: 0 0 var(--spacing-sm) 0;
+  color: var(--color-text);
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+}
+
+.encoder-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-sm);
+}
+
+.encoder-item {
+  background-color: var(--color-background);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-radius: var(--border-radius-small);
+  display: flex;
+  flex-direction: column;
+}
+
+.encoder-name {
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  font-size: var(--font-size-sm);
+}
+
+.encoder-type {
+  color: var(--color-text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* Form e pulsanti stile Twitch */
+.form-group {
+  margin-bottom: var(--spacing-md);
+  padding: 0 var(--spacing-md);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: var(--spacing-xs);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  color: var(--color-text);
+  transition: color var(--transition-fast);
+}
+
+.form-group input {
+  width: 100%;
+  height: 40px;
+  padding: 0 var(--spacing-sm);
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: var(--border-radius-small);
+  font-family: var(--font-family);
+  font-size: var(--font-size-md);
+  background-color: var(--color-background-light);
+  color: var(--color-text);
+  transition: all var(--transition-fast);
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(145, 71, 255, 0.2);
+}
+
+.form-group input:hover:not(:disabled) {
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.form-group input:disabled {
+  background-color: var(--color-background);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.error-message {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.validation-error {
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  margin-top: var(--spacing-xs);
+}
+
+.stream-urls {
+  padding: 0 var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+}
+
+.url-group {
+  margin-bottom: var(--spacing-md);
+  animation: fadeIn 0.4s ease-out;
+  animation-fill-mode: both;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.url-group h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+  display: flex;
+  align-items: center;
+}
+
+.url-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-small);
+  padding: var(--spacing-sm);
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  transition: all var(--transition-fast);
+}
+
+.url-box:hover {
+  border-color: var(--color-primary);
+  box-shadow: 0 0 10px rgba(145, 71, 255, 0.1);
+}
+
+.url-box p {
+  margin: 0;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  word-break: break-all;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  background-color: rgba(0, 0, 0, 0.2);
+  border-radius: var(--border-radius-small);
+  border-left: 2px solid var(--color-primary);
+}
+
+.copy-button {
+  background: linear-gradient(to right, var(--color-primary-dark), var(--color-primary));
+  color: white;
+  border: none;
+  padding: 0 var(--spacing-sm);
+  height: 34px;
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  margin-left: var(--spacing-sm);
+  margin-top: var(--spacing-sm);
+  white-space: nowrap;
+  transition: all var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  box-shadow: 0 2px 5px rgba(145, 71, 255, 0.3);
+  position: relative;
+  overflow: hidden;
+}
+
+.copy-button::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: all 0.6s;
+}
+
+.copy-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(145, 71, 255, 0.4);
+}
+
+.copy-button:hover::before {
+  left: 100%;
+}
+
+.copy-button:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px rgba(145, 71, 255, 0.3);
+}
+
+.url-group h3 {
+  margin: 0 0 var(--spacing-xs) 0;
+  font-size: var(--font-size-md);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.url-box {
+  display: flex;
+  align-items: center;
+  background-color: var(--color-background-light);
+  border-radius: var(--border-radius-small);
+  padding: var(--spacing-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.url-box p {
+  margin: 0;
+  flex-grow: 1;
+  font-family: monospace;
+  font-size: var(--font-size-sm);
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.copy-button {
+  background-color: var(--color-background);
+  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0 var(--spacing-sm);
+  height: 30px;
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-xs);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  margin-left: var(--spacing-sm);
+  white-space: nowrap;
+  transition: background-color var(--transition-fast);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+}
+
+.copy-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.waiting-message {
+  display: flex;
+  align-items: center;
+  margin: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: var(--color-background-light);
+  border-radius: var(--border-radius-small);
+}
+
+.spinner {
+  width: 24px;
+  height: 24px;
+  border: 3px solid rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  border-top-color: var(--color-primary);
+  animation: spin 1s ease-in-out infinite;
+  margin-right: var(--spacing-md);
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.waiting-message p {
+  margin: 0;
+  color: var(--color-text);
+}
+
+.success-message {
+  display: flex;
+  align-items: center;
+  margin: var(--spacing-md);
+  padding: var(--spacing-md);
+  background-color: rgba(62, 180, 137, 0.1);
+  border-radius: var(--border-radius-small);
+  color: var(--color-success);
+}
+
+.success-message p {
+  margin: 0;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-md);
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.close-button,
+.cancel-button,
+.create-button {
+  height: 36px;
+  padding: 0 var(--spacing-md);
+  border-radius: var(--border-radius-small);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: background-color var(--transition-fast);
+}
+
+.close-button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.close-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.cancel-button {
+  background-color: transparent;
+  color: var(--color-text);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.cancel-button:hover {
+  background-color: rgba(255, 255, 255, 0.05);
+}
+
+.cancel-button:disabled {
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+
+.create-button {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+}
+
+.create-button:hover {
+  background-color: var(--color-primary-dark);
+}
+
+.create-button:disabled {
+  background-color: rgba(255, 255, 255, 0.1);
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
