@@ -78,7 +78,12 @@ setup_environment() {
     echo -e "${YELLOW}Setting up frontend development environment...${RESET}"
     
     if [ ! -f ".env.development" ]; then
-      if command -v node &> /dev/null; then
+      # Copy the frontend.env.example from root directory
+      if [ -f "../frontend.env.example" ]; then
+        echo -e "${YELLOW}Copying frontend.env.example to .env.development...${RESET}"
+        cp ../frontend.env.example .env.development
+        echo -e "${GREEN}✓ Created frontend .env.development file from template${RESET}"
+      elif command -v node &> /dev/null; then
         echo -e "${YELLOW}Running env setup script...${RESET}"
         npm run setup-env -- development
       else
@@ -93,7 +98,12 @@ setup_environment() {
     echo -e "${YELLOW}Setting up frontend production environment...${RESET}"
     
     if [ ! -f ".env" ]; then
-      if command -v node &> /dev/null; then
+      # Copy the frontend.env.example from root directory
+      if [ -f "../frontend.env.example" ]; then
+        echo -e "${YELLOW}Copying frontend.env.example to .env...${RESET}"
+        cp ../frontend.env.example .env
+        echo -e "${GREEN}✓ Created frontend .env file from template${RESET}"
+      elif command -v node &> /dev/null; then
         echo -e "${YELLOW}Running env setup script...${RESET}"
         npm run setup-env -- production
       else
@@ -115,9 +125,16 @@ setup_environment() {
     echo -e "${YELLOW}Setting up backend development environment...${RESET}"
     
     if [ ! -f ".env.development" ]; then
-      echo -e "${YELLOW}Copying example env file...${RESET}"
-      cp .env.example .env.development
-      echo -e "${YELLOW}⚠ You need to manually edit .env.development to set required values${RESET}"
+      # Copy the backend.env.example from root directory
+      if [ -f "../backend.env.example" ]; then
+        echo -e "${YELLOW}Copying backend.env.example to .env.development...${RESET}"
+        cp ../backend.env.example .env.development
+        echo -e "${GREEN}✓ Created backend .env.development file from template${RESET}"
+      else
+        echo -e "${YELLOW}Copying example env file...${RESET}"
+        cp .env.example .env.development
+        echo -e "${YELLOW}⚠ You need to manually edit .env.development to set required values${RESET}"
+      fi
     else
       echo -e "${GREEN}✓ Backend development environment file already exists${RESET}"
     fi
@@ -125,9 +142,16 @@ setup_environment() {
     echo -e "${YELLOW}Setting up backend production environment...${RESET}"
     
     if [ ! -f ".env" ]; then
-      echo -e "${YELLOW}Copying example env file...${RESET}"
-      cp .env.example .env
-      echo -e "${YELLOW}⚠ You need to manually edit .env to set required values${RESET}"
+      # Copy the backend.env.example from root directory
+      if [ -f "../backend.env.example" ]; then
+        echo -e "${YELLOW}Copying backend.env.example to .env...${RESET}"
+        cp ../backend.env.example .env
+        echo -e "${GREEN}✓ Created backend .env file from template${RESET}"
+      else
+        echo -e "${YELLOW}Copying example env file...${RESET}"
+        cp .env.example .env
+        echo -e "${YELLOW}⚠ You need to manually edit .env to set required values${RESET}"
+      fi
     else
       echo -e "${GREEN}✓ Backend production environment file already exists${RESET}"
     fi
