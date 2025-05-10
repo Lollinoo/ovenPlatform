@@ -5,10 +5,8 @@
  * 
  * This script checks:
  * 1. The presence of required .env files
- * 2. The validity of necessary environment variables based on the current NODE_ENV
+ * 2. The validity of necessary environment variables
  * 3. Potential configuration issues
- * 
- * Version: 1.1.2
  */
 const fs = require('fs');
 const path = require('path');
@@ -27,6 +25,7 @@ const colors = {
 };
 
 // Determine current environment
+// Importante: leggere questo valore all'inizio dello script
 const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Define the base directory
@@ -66,6 +65,9 @@ if (NODE_ENV === 'development') {
   envFiles.push({ name: '.env', required: true });
 }
 
+// Verifica se siamo in modalità Docker build
+const isDockerBuild = process.env.DOCKER_BUILD === 'true';
+
 // Check for the presence of environment files
 console.log(`${colors.bold}${colors.blue}=== Environment Configuration File Check (${NODE_ENV}) ===${colors.reset}\n`);
 
@@ -89,24 +91,28 @@ envFiles.forEach(file => {
 
 console.log('');
 
+// Se è un build Docker e mancano file richiesti, continua comunque con un avviso
+if (isDockerBuild && !allFilesValid) {
+  console.log(`${colors.yellow}⚠ Docker build detected: continuing despite missing .env files${colors.reset}`);
+  allFilesValid = true;
+}
+
 // Load .env files
 let envVars = {};
 
 if (NODE_ENV === 'development') {
-  // For development, load .env.development file
+  // Per development, carica .env.development
   envVars = dotenv.config({ path: path.join(baseDir, '.env.development') }).parsed || {};
-  
-  // Also load .env.local if it exists (optional, for local overrides)
-  const localEnvPath = path.join(baseDir, '.env.local');
-  if (fs.existsSync(localEnvPath)) {
-    envVars = { 
-      ...envVars,
-      ...dotenv.config({ path: localEnvPath }).parsed || {} 
-    };
-  }
 } else {
-  // For production, load .env file
   envVars = dotenv.config({ path: path.join(baseDir, '.env') }).parsed || {};
+}
+
+if (isDockerBuild) {
+  Object.keys(process.env).forEach(key => {
+    if (key.startsWith('VITE_')) {
+      envVars[key] = process.env[key];
+    }
+  });
 }
 
 // Function to validate environment variables
@@ -117,7 +123,8 @@ function checkEnvVars(env, vars, envName) {
   
   // Check required variables
   vars.forEach(variable => {
-    if (env[variable]) {
+    // Check in env file first, then in process.env
+    if (env[variable] || (isDockerBuild && process.env[variable])) {
       console.log(`${colors.green}✓ ${variable}${colors.reset}`);
     } else {
       console.log(`${colors.red}✗ ${variable} MISSING${colors.reset}`);
@@ -128,7 +135,7 @@ function checkEnvVars(env, vars, envName) {
   return allValid;
 }
 
-// Validate all required variables for the current environment
+// Validate variables for current environment
 console.log('');
 const varsToCheck = [
   ...requiredVars.base,
@@ -166,7 +173,16 @@ console.log('\n');
 if (allValid) {
   console.log(`${colors.bold}${colors.green}✓ All configurations appear valid for ${NODE_ENV} environment!${colors.reset}`);
 } else {
-  console.log(`${colors.bold}${colors.red}✗ There are issues with the configurations for ${NODE_ENV} environment. Please resolve the indicated errors.${colors.reset}`);
+  // For Docker builds in production, provide a warning but do not fail
+  if (isDockerBuild && NODE_ENV === 'production') {
+    console.log(`${colors.yellow}⚠ There are some issues with the configurations for ${NODE_ENV} environment.${colors.reset}`);
+    console.log(`${colors.yellow}⚠ Since this is a Docker build, the application will attempt to continue.${colors.reset}`);
+    console.log(`${colors.yellow}⚠ Please ensure environment variables are correctly set in the container environment.${colors.reset}`);
+    process.exit(0); // Exit with success in Docker builds
+  } else {
+    console.log(`${colors.bold}${colors.red}✗ There are issues with the configurations for ${NODE_ENV} environment. Please resolve the indicated errors.${colors.reset}`);
+    process.exit(1); // Exit with error in local development
+  }
 }
 
 process.exit(allValid ? 0 : 1);

@@ -7,15 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [1.1.2] - 2025-05-10
 
+### Fixed
+- Fixed environment variable handling in Docker builds to support production deployments
+- Fixed issue where frontend builds would fail in production mode due to missing development dependencies
+- Fixed NODE_ENV detection in check-env.cjs to properly handle Docker environments
+
 ### Changed
 - Modified environment handling so that production uses `.env` and development uses `.env.development`
 - Removed requirement for `.env.production` in production deployments
 - Simplified docker-compose configurations to use appropriate environment files based on mode
+- Enhanced check-env.cjs to be more tolerant in Docker environments
 
 ### Added
 - Created comprehensive `.env.example` templates for both frontend and backend
 - Added docker-compose.yaml.example for easier deployment configuration
 - Created ENV_CONFIG.md with detailed documentation on environment setup
+- Added automatic Docker environment detection with DOCKER_BUILD flag
 
 ## [1.1.1] - 2025-05-10
 

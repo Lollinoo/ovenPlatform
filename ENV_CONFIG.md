@@ -20,6 +20,25 @@ The script will create the necessary environment files and guide you through the
 
 OvenPlatform uses different environment files depending on the execution mode:
 
+### Development Mode
+- **Frontend**: uses `.env.development` file
+- **Backend**: uses `.env.development` file 
+
+### Production Mode
+- **Frontend**: uses `.env` file
+- **Backend**: uses `.env` file
+
+## Environment Detection in Docker
+
+OvenPlatform automatically detects Docker environments and adjusts its behavior:
+
+1. When building in Docker, development dependencies are installed to ensure proper build process
+2. In production Docker containers, environment variables can be provided either:
+   - As Docker environment variables (preferred for orchestration)
+   - Through mounted `.env` files
+
+The `DOCKER_BUILD=true` environment variable is automatically set in Docker environments to facilitate proper configuration detection.
+
 - **Production**: Uses `.env` for both frontend and backend
 - **Development**: Uses `.env.development` for both frontend and backend
 
