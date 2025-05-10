@@ -13,6 +13,14 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
   const [streamData, setStreamData] = useState(null);
   const [copiedDomain, setCopiedDomain] = useState(false);
   const [copiedKey, setCopiedKey] = useState(false);
+  
+  // Stati per la validazione
+  const [validation, setValidation] = useState({
+    minLength: false,
+    noSpaces: false,
+    validChars: false,
+    isValid: false
+  });
 
   useEffect(() => {
     let pollingInterval;
@@ -66,6 +74,13 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
       setStreamFound(false);
       setShowSuccess(false);
       setStreamData(null);
+      // Reset della validazione
+      setValidation({
+        minLength: false,
+        noSpaces: false,
+        validChars: false,
+        isValid: false
+      });
     }
   }, [isOpen]);
 
@@ -78,14 +93,46 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
     setStreamData(null);
     setCopiedDomain(false);
     setCopiedKey(false);
+    // Reset della validazione
+    setValidation({
+      minLength: false,
+      noSpaces: false,
+      validChars: false,
+      isValid: false
+    });
+  };
+  
+  // Funzione per validare il nome della stream in tempo reale
+  const validateStreamName = (name) => {
+    // Controlla lunghezza minima (8 caratteri)
+    const hasMinLength = name.length >= 8;
+    
+    // Controlla che non ci siano spazi
+    const hasNoSpaces = !/\s/.test(name);
+    
+    // Controlla caratteri validi (solo alfanumerici, trattini e underscore)
+    const hasValidChars = /^[a-zA-Z0-9_-]+$/.test(name);
+    
+    // Aggiorna lo stato di validazione
+    const isValid = hasMinLength && hasNoSpaces && hasValidChars;
+    
+    setValidation({
+      minLength: hasMinLength,
+      noSpaces: hasNoSpaces,
+      validChars: hasValidChars,
+      isValid
+    });
+    
+    return isValid;
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     const trimmedStreamName = streamName.trim();
 
-    if (!trimmedStreamName) {
-      setError("Inserisci un nome per la stream");
+    // Valida nuovamente prima di inviare
+    if (!validateStreamName(trimmedStreamName)) {
+      setError("Please ensure the stream name meets all requirements");
       return;
     }
 
@@ -171,12 +218,43 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
               type="text"
               id="streamName"
               value={streamName}
-              onChange={(e) => setStreamName(e.target.value)}
+              onChange={(e) => {
+                const newValue = e.target.value;
+                setStreamName(newValue);
+                validateStreamName(newValue);
+              }}
               placeholder="Enter stream name"
               disabled={isWaiting || streamData}
             />
           </div>
-          {error && <p className="error-message">{error}</p>}
+          
+          {/* Indicatori di validazione con icone migliorate */}
+          {!streamData && (
+            <div className="validation-requirements">
+              <p className="validation-title">Stream name requirements:</p>
+              <ul className="validation-list">
+                <li className={validation.minLength ? "valid" : "invalid"}>
+                  <span className="validation-icon">{validation.minLength ? "✓" : "✗"}</span>
+                  Minimum 8 characters
+                </li>
+                <li className={validation.noSpaces ? "valid" : "invalid"}>
+                  <span className="validation-icon">{validation.noSpaces ? "✓" : "✗"}</span>
+                  No spaces
+                </li>
+                <li className={validation.validChars ? "valid" : "invalid"}>
+                  <span className="validation-icon">{validation.validChars ? "✓" : "✗"}</span>
+                  Only letters, numbers, hyphens and underscores
+                </li>
+              </ul>
+            </div>
+          )}
+          
+          {error && (
+            <div className="error-message">
+              <div className="error-icon">!</div>
+              <p>{error}</p>
+            </div>
+          )}
           {streamData && (
             <div className="stream-urls">
               <div className="url-group">
@@ -192,7 +270,7 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
                     setCopiedDomain(true);
                     setTimeout(() => setCopiedDomain(false), 2000);
                   }}
-                  className="copy-button"
+                  className={`copy-button ${copiedDomain ? 'copied' : ''}`}
                 >
                   {copiedDomain ? 'Copied!' : 'Copy Stream URL'}
                 </button>
@@ -210,7 +288,7 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
                     setCopiedKey(true);
                     setTimeout(() => setCopiedKey(false), 2000);
                   }}
-                  className="copy-button"
+                  className={`copy-button ${copiedKey ? 'copied' : ''}`}
                 >
                   {copiedKey ? 'Copied!' : 'Copy Stream Key'}
                 </button>
@@ -225,6 +303,7 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
           )}
           {showSuccess && (
             <div className="success-message">
+              <div className="success-icon">✓</div>
               <p>Stream detected successfully!</p>
             </div>
           )}
@@ -268,8 +347,8 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
                 </button>
                 <button
                   type="submit"
-                  className="create-button"
-                  disabled={isWaiting}
+                  className={`create-button ${!validation.isValid ? 'disabled' : ''}`}
+                  disabled={isWaiting || !validation.isValid}
                 >
                   {isWaiting ? "Creating stream..." : "Crea Stream"}
                 </button>

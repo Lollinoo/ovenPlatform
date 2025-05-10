@@ -18,8 +18,7 @@ export const config = {
   // Application information
   app: {
     name: getEnv('VITE_APP_NAME', 'OvenPlatform'),
-    mode: getEnv('VITE_MODE', 'development'),
-    apiVersion: getEnv('VITE_API_VERSION', '1.0.0'),
+    mode: getEnv('VITE_MODE', 'production'),
     apiUrl: getEnv('VITE_API_URL', 'http://localhost:3000'),
     viteUrl: getEnv('VITE_HOST', 'localhost:3000'),
     isProduction: getEnv('VITE_MODE') === 'production',

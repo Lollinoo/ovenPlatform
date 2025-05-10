@@ -5,8 +5,10 @@
  * 
  * This script checks:
  * 1. The presence of required .env files
- * 2. The validity of necessary environment variables
+ * 2. The validity of necessary environment variables based on the current NODE_ENV
  * 3. Potential configuration issues
+ * 
+ * Version: 1.1.2
  */
 const fs = require('fs');
 const path = require('path');
@@ -23,6 +25,9 @@ const colors = {
   cyan: '\x1b[36m',
   bold: '\x1b[1m'
 };
+
+// Determine current environment
+const NODE_ENV = process.env.NODE_ENV || 'development';
 
 // Define the base directory
 const baseDir = path.resolve(__dirname, '..');
@@ -50,16 +55,21 @@ const requiredVars = {
   ]
 };
 
-// Files to check
-const envFiles = [
-  { name: '.env', required: true },
-  { name: '.env.development', required: true },
-  { name: '.env.production', required: true },
-  { name: '.env.local', required: false },
+// Files to check based on environment
+let envFiles = [
+  { name: '.env', required: true }
 ];
 
+// Add environment-specific files based on NODE_ENV
+if (NODE_ENV === 'development') {
+  envFiles.push({ name: '.env.development', required: false });
+  envFiles.push({ name: '.env.local', required: false });
+} else if (NODE_ENV === 'production') {
+  envFiles.push({ name: '.env.production', required: true });
+}
+
 // Check for the presence of environment files
-console.log(`${colors.bold}${colors.blue}=== Environment Configuration File Check ===${colors.reset}\n`);
+console.log(`${colors.bold}${colors.blue}=== Environment Configuration File Check (${NODE_ENV}) ===${colors.reset}\n`);
 
 let allFilesValid = true;
 let allVarsValid = true;
@@ -115,13 +125,19 @@ function checkEnvVars(env, vars, envName) {
 const baseVarsValid = checkEnvVars(envBase, requiredVars.base, 'Base (.env)');
 console.log('');
 
-// Validate development variables
-const devVarsValid = checkEnvVars(envDev, requiredVars.development, 'Development (.env.development)');
-console.log('');
+// Only validate development variables in development mode
+let devVarsValid = true;
+if (NODE_ENV === 'development') {
+  devVarsValid = checkEnvVars(envDev, requiredVars.development, 'Development (.env.development)');
+  console.log('');
+}
 
-// Validate production variables
-const prodVarsValid = checkEnvVars(envProd, requiredVars.production, 'Production (.env.production)');
-console.log('');
+// Only validate production variables in production mode
+let prodVarsValid = true;
+if (NODE_ENV === 'production') {
+  prodVarsValid = checkEnvVars(envProd, requiredVars.production, 'Production (.env.production)');
+  console.log('');
+}
 
 // Additional checks and warnings
 console.log(`${colors.bold}${colors.blue}=== Additional Checks ===${colors.reset}\n`);
@@ -144,13 +160,15 @@ checkUrl(envProd.VITE_LLHLS_URL_BASE, 'VITE_LLHLS_URL_BASE', 'production');
 checkUrl(envProd.VITE_API_URL, 'VITE_API_URL', 'production');
 
 // Final status
-const allValid = allFilesValid && baseVarsValid && devVarsValid && prodVarsValid;
+const allValid = allFilesValid && baseVarsValid && 
+  (NODE_ENV === 'development' ? devVarsValid : true) && 
+  (NODE_ENV === 'production' ? prodVarsValid : true);
 
 console.log('\n');
 if (allValid) {
-  console.log(`${colors.bold}${colors.green}✓ All configurations appear valid!${colors.reset}`);
+  console.log(`${colors.bold}${colors.green}✓ All configurations appear valid for ${NODE_ENV} environment!${colors.reset}`);
 } else {
-  console.log(`${colors.bold}${colors.red}✗ There are issues with the configurations. Please resolve the indicated errors.${colors.reset}`);
+  console.log(`${colors.bold}${colors.red}✗ There are issues with the configurations for ${NODE_ENV} environment. Please resolve the indicated errors.${colors.reset}`);
 }
 
 process.exit(allValid ? 0 : 1);

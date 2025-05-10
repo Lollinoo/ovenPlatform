@@ -4,7 +4,7 @@ services:
     build:
       context: ../ovenPlatform-be
       dockerfile: Dockerfile.prod
-    image: oven-backend-prod:1.0.2
+    image: oven-backend-prod:1.1.0
     container_name: oven-backend-prod
     restart: unless-stopped
     ports:
@@ -28,14 +28,15 @@ services:
     build:
       context: ../ovenPlatform-web
       dockerfile: Dockerfile.prod
-    image: oven-frontend-prod:1.0.2
+      args:
+        - NODE_ENV=production
+    image: oven-frontend-prod:1.1.0
     container_name: oven-frontend-prod
     restart: unless-stopped
     ports:
       - "4173:4173"
     environment:
       - NODE_ENV=production
-      # - VITE_API_URL=${BACKEND_URL:-http://oven-backend:3000}
     env_file:
       - ../ovenPlatform-web/.env
       - ../ovenPlatform-web/.env.production
@@ -66,6 +67,7 @@ services:
 
 networks:
   oven-network:
+    name: oven-network
     driver: bridge
 
 # volumes:

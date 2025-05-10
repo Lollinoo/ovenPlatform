@@ -4,6 +4,7 @@ import { useState } from "react";
 import "../styles/theme.css";
 import "../styles/Navbar.css";
 import config from "../utils/envConfig";
+import packageJson from "../package.json";
 
 function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
@@ -18,7 +19,7 @@ function Navbar() {
         <div className="navbar-logo">
           <a href="/">OvenPlatform</a>
           <div className="version-badge">
-            v{config.app.apiVersion} 
+            v{packageJson.version} 
             <span className={config.app.isProduction ? "env-prod" : "env-dev"}>
               {config.app.isProduction ? "PROD" : "DEV"}
             </span>

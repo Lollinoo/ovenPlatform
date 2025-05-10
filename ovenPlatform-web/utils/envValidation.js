@@ -16,7 +16,6 @@ import { z } from 'zod';
  * 
  * @property {string} VITE_APP_NAME - The name of the application. Defaults to 'OvenPlatform'.
  * @property {'development'|'production'} VITE_MODE - The mode in which the application is running. Defaults to 'development'.
- * @property {string} VITE_API_VERSION - The version of the API. Defaults to '1.0.0'.
  * @property {string} [VITE_API_URL] - The base URL of the API. Must be a valid URL. Optional.
  * @property {string} [VITE_HOST] - The host address of the application. Optional.
  * 
@@ -35,7 +34,6 @@ const envSchema = z.object({
   // Application information
   VITE_APP_NAME: z.string().default('OvenPlatform'),
   VITE_MODE: z.enum(['development', 'production']).default('development'),
-  VITE_API_VERSION: z.string().default('1.0.0'),
   VITE_API_URL: z.string().url().optional(),
   VITE_HOST: z.string().optional(),
   
