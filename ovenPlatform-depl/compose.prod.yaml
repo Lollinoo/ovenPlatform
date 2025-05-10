@@ -4,7 +4,7 @@ services:
     build:
       context: ../ovenPlatform-be
       dockerfile: Dockerfile.prod
-    image: oven-backend-prod:1.1.0
+    image: oven-backend-prod:1.1.2
     container_name: oven-backend-prod
     restart: unless-stopped
     ports:
@@ -13,7 +13,7 @@ services:
       - NODE_ENV=production
       - PORT=3000
     env_file:
-      - ../ovenPlatform-be/.env.production
+      - ../ovenPlatform-be/.env
     # healthcheck:
     #   test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/api/v1/health"]
     #   interval: 30s
@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile.prod
       args:
         - NODE_ENV=production
-    image: oven-frontend-prod:1.1.0
+    image: oven-frontend-prod:1.1.2
     container_name: oven-frontend-prod
     restart: unless-stopped
     ports:
@@ -39,7 +39,6 @@ services:
       - NODE_ENV=production
     env_file:
       - ../ovenPlatform-web/.env
-      - ../ovenPlatform-web/.env.production
     depends_on:
       - oven-backend-prod
         # condition: service_healthy

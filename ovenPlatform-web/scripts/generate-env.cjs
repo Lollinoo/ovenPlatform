@@ -7,6 +7,8 @@
  * 1. Reads all existing .env files
  * 2. Extracts all used environment variables
  * 3. Generates a .env.example file with empty variables
+ * 
+ * Version: 1.1.2
  */
 
 const fs = require('fs');

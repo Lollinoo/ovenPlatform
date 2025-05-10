@@ -10,7 +10,7 @@
  * - Validates required environment variables
  * - Provides guidance for missing configuration
  * 
- * Version: 1.0.0
+ * Version: 1.1.2
  */
 
 const fs = require('fs');

@@ -2,16 +2,17 @@ const dotenv = require("dotenv");
 const path = require("path");
 
 // Determine .env file path based on NODE_ENV
-// For production, environment variables might be injected directly or a .env.production file used.
-// For development, .env.development is used.
-// A general .env can serve as a fallback or for shared variables.
-const envPath = path.resolve(__dirname, process.env.NODE_ENV === "production" ? "./.env.production" : "./.env.development");
+// For production, use .env
+// For development, use .env.development
+const envPath = path.resolve(__dirname, process.env.NODE_ENV === "production" ? "./.env" : "./.env.development");
 dotenv.config({ path: envPath });
 
-// Fallback to .env if the specific environment file doesn't exist or for common variables.
-// Do not override variables already set by the more specific .env file.
+// Fallback to .env.local for development if exists (for local overrides)
 if (process.env.NODE_ENV !== "production") {
-  dotenv.config({ path: path.resolve(__dirname, "./.env"), override: false });
+  const localEnvPath = path.resolve(__dirname, "./.env.local");
+  if (require("fs").existsSync(localEnvPath)) {
+    dotenv.config({ path: localEnvPath, override: true });
+  }
 }
 
 const config = {

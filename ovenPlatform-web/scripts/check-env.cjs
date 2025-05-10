@@ -56,16 +56,14 @@ const requiredVars = {
 };
 
 // Files to check based on environment
-let envFiles = [
-  { name: '.env', required: true }
-];
+let envFiles = [];
 
 // Add environment-specific files based on NODE_ENV
 if (NODE_ENV === 'development') {
-  envFiles.push({ name: '.env.development', required: false });
+  envFiles.push({ name: '.env.development', required: true });
   envFiles.push({ name: '.env.local', required: false });
 } else if (NODE_ENV === 'production') {
-  envFiles.push({ name: '.env.production', required: true });
+  envFiles.push({ name: '.env', required: true });
 }
 
 // Check for the presence of environment files
@@ -92,15 +90,24 @@ envFiles.forEach(file => {
 console.log('');
 
 // Load .env files
-const envBase = dotenv.config({ path: path.join(baseDir, '.env') }).parsed || {};
-const envDev = {
-  ...envBase,
-  ...dotenv.config({ path: path.join(baseDir, '.env.development') }).parsed || {}
-};
-const envProd = {
-  ...envBase,
-  ...dotenv.config({ path: path.join(baseDir, '.env.production') }).parsed || {}
-};
+let envVars = {};
+
+if (NODE_ENV === 'development') {
+  // For development, load .env.development file
+  envVars = dotenv.config({ path: path.join(baseDir, '.env.development') }).parsed || {};
+  
+  // Also load .env.local if it exists (optional, for local overrides)
+  const localEnvPath = path.join(baseDir, '.env.local');
+  if (fs.existsSync(localEnvPath)) {
+    envVars = { 
+      ...envVars,
+      ...dotenv.config({ path: localEnvPath }).parsed || {} 
+    };
+  }
+} else {
+  // For production, load .env file
+  envVars = dotenv.config({ path: path.join(baseDir, '.env') }).parsed || {};
+}
 
 // Function to validate environment variables
 function checkEnvVars(env, vars, envName) {
@@ -121,23 +128,14 @@ function checkEnvVars(env, vars, envName) {
   return allValid;
 }
 
-// Validate base variables
-const baseVarsValid = checkEnvVars(envBase, requiredVars.base, 'Base (.env)');
+// Validate all required variables for the current environment
 console.log('');
+const varsToCheck = [
+  ...requiredVars.base,
+  ...(NODE_ENV === 'development' ? requiredVars.development : requiredVars.production)
+];
 
-// Only validate development variables in development mode
-let devVarsValid = true;
-if (NODE_ENV === 'development') {
-  devVarsValid = checkEnvVars(envDev, requiredVars.development, 'Development (.env.development)');
-  console.log('');
-}
-
-// Only validate production variables in production mode
-let prodVarsValid = true;
-if (NODE_ENV === 'production') {
-  prodVarsValid = checkEnvVars(envProd, requiredVars.production, 'Production (.env.production)');
-  console.log('');
-}
+const varsValid = checkEnvVars(envVars, varsToCheck, NODE_ENV);
 
 // Additional checks and warnings
 console.log(`${colors.bold}${colors.blue}=== Additional Checks ===${colors.reset}\n`);
@@ -155,14 +153,14 @@ function checkUrl(url, name, envType) {
 }
 
 // Check URLs in production
-checkUrl(envProd.VITE_WEBRTC_URL_BASE, 'VITE_WEBRTC_URL_BASE', 'production');
-checkUrl(envProd.VITE_LLHLS_URL_BASE, 'VITE_LLHLS_URL_BASE', 'production');
-checkUrl(envProd.VITE_API_URL, 'VITE_API_URL', 'production');
+if (NODE_ENV === 'production') {
+  checkUrl(envVars.VITE_WEBRTC_URL_BASE, 'VITE_WEBRTC_URL_BASE', 'production');
+  checkUrl(envVars.VITE_LLHLS_URL_BASE, 'VITE_LLHLS_URL_BASE', 'production');
+  checkUrl(envVars.VITE_API_URL, 'VITE_API_URL', 'production');
+}
 
 // Final status
-const allValid = allFilesValid && baseVarsValid && 
-  (NODE_ENV === 'development' ? devVarsValid : true) && 
-  (NODE_ENV === 'production' ? prodVarsValid : true);
+const allValid = allFilesValid && varsValid;
 
 console.log('\n');
 if (allValid) {

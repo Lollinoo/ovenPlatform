@@ -2,6 +2,24 @@
 
 This guide explains how to deploy the OvenPlatform application in different environments.
 
+## Quick Deployment
+
+The simplest way to deploy OvenPlatform is using our automated deployment script:
+
+```bash
+# For development deployment
+./deploy.sh --env development
+
+# For production deployment
+./deploy.sh --env production
+```
+
+This script will:
+1. Check prerequisites (Docker, Docker Compose)
+2. Set up appropriate environment files
+3. Build Docker images
+4. Start the containers
+
 ## Environment Setup
 
 OvenPlatform uses environment files to configure the application for different deployment scenarios. The application supports development and production environments.

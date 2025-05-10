@@ -5,6 +5,18 @@ All notable changes to the OvenPlatform application will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.2] - 2025-05-10
+
+### Changed
+- Modified environment handling so that production uses `.env` and development uses `.env.development`
+- Removed requirement for `.env.production` in production deployments
+- Simplified docker-compose configurations to use appropriate environment files based on mode
+
+### Added
+- Created comprehensive `.env.example` templates for both frontend and backend
+- Added docker-compose.yaml.example for easier deployment configuration
+- Created ENV_CONFIG.md with detailed documentation on environment setup
+
 ## [1.1.1] - 2025-05-10
 
 ### Fixed
