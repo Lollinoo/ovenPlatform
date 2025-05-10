@@ -117,6 +117,7 @@ const PlayerPage = () => {
                 sources={streamSources}
                 autoStart={true}
                 autoFallback={true}
+                iceServers={config.iceServer}
                 onReady={handlePlayerReady}
                 onError={handlePlayerError}
               />

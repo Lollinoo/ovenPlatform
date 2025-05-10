@@ -37,8 +37,8 @@ export const config = {
   // TURN/ICE server configuration
   iceServer: {
     urls: [
-      getEnv('VITE_TURN_SERVER_URL_UDP', 'turn:localhost:3478?transport=udp'),
-      getEnv('VITE_TURN_SERVER_URL_TCP', 'turn:localhost:3478?transport=tcp'),
+      getEnv('VITE_TURN_SERVER_URL_UDP', 'turn:localhost:3478?transport=udp').replace(/^"|"$/g, ''),
+      getEnv('VITE_TURN_SERVER_URL_TCP', 'turn:localhost:3478?transport=tcp').replace(/^"|"$/g, ''),
     ],
     username: getEnv('VITE_TURN_SERVER_USERNAME', 'username'),
     credential: getEnv('VITE_TURN_SERVER_CREDENTIAL', 'password'),

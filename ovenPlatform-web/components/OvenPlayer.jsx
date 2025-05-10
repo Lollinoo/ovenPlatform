@@ -47,7 +47,7 @@ const OvenPlayer = ({
         autoFallback,
         sources,
         webrtcConfig: {
-          iceServers
+          iceServers: Array.isArray(iceServers) ? iceServers : [iceServers]
         }
       };
 
