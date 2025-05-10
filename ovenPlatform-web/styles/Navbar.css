@@ -24,6 +24,7 @@
 .navbar-logo {
   display: flex;
   align-items: center;
+  position: relative;
 }
 
 .navbar-logo a {
@@ -159,6 +160,38 @@
   background-color: var(--color-primary);
 }
 
+/* Badge di versione e ambiente */
+.version-badge {
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-xs);
+  margin-left: 12px;
+  padding: 2px 4px;
+  border-radius: 4px;
+  background-color: rgba(0, 0, 0, 0.2);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  letter-spacing: 0.5px;
+}
+
+.version-badge span {
+  margin-left: 5px;
+  padding: 1px 4px;
+  border-radius: 3px;
+  font-size: 0.7rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.env-dev {
+  background-color: var(--color-warning);
+  color: var(--color-dark);
+}
+
+.env-prod {
+  background-color: var(--color-success);
+  color: var(--color-light);
+}
+
 @media (max-width: 768px) {
   .navbar-container {
     padding: 0 var(--spacing-sm);
@@ -198,5 +231,11 @@
     width: 100%;
     padding: var(--spacing-sm) 0;
     font-size: var(--font-size-md);
+  }
+
+  .version-badge {
+    font-size: 0.6rem;
+    margin-left: 8px;
+    padding: 1px 3px;
   }
 }

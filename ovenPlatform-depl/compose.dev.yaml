@@ -1,5 +1,5 @@
 services:
-  oven-backend:
+  oven-backend-dev:
     build:
       context: ../ovenPlatform-be
       dockerfile: Dockerfile.dev
@@ -13,7 +13,7 @@ services:
     networks:
       - ovendevelop-net
 
-  oven-frontend:
+  oven-frontend-dev:
     build:
       context: ../ovenPlatform-web
       dockerfile: Dockerfile.dev
