@@ -18,14 +18,14 @@ class StreamController {
    * @param {Object} req - Request object
    * @param {Object} res - Response object
    */
-  async getStreamWithStats(req, res) {
+  async getAllActiveStreamsWithStats(req, res) {
     try {
-      const data = await omeService.getStreamWithStats();
+      const data = await omeService.getAllActiveStreamsWithStats();
       res.json(data);
     } catch (error) {
       // omeService now handles more detailed logging of OME API errors.
       // Here, we focus on sending a consistent error response to the client.
-      console.error("Error in StreamController.getStreamWithStats:", error.message);
+      console.error("Error in StreamController.getAllActiveStreamsWithStats:", error.message);
       const statusCode = error.response?.status || 500;
       const responseMessage = error.isAxiosError ? (error.response?.data?.message || error.message) : "Internal server error";
       res.status(statusCode).json({ message: responseMessage });
@@ -280,6 +280,58 @@ class StreamController {
       res.status(statusCode).json({ 
         code: responseCode,
         message: responseMessage 
+      });
+    }
+  }
+
+  /**
+   * Gets statistics for a specific stream.
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getStreamStats(req, res) {
+    try {
+      const { streamName } = req.params;
+      
+      // Basic presence check
+      if (!streamName || typeof streamName !== 'string' || streamName.trim() === '') {
+        return res.status(400).json({
+          code: 'MISSING_STREAM_NAME',
+          message: "'streamName' URL parameter is required and must be a non-empty string."
+        });
+      }
+
+      // Comprehensive validation with specific rules
+      const validation = validateStreamName(streamName);
+      if (!validation.isValid) {
+        return res.status(validation.error.status).json({
+          code: validation.error.code,
+          message: validation.error.message
+        });
+      }
+
+      try {
+        const streamStats = await omeService.getStreamStats(streamName.trim());
+        res.json(streamStats);
+      } catch (error) {
+        if (error.message && error.message.includes('not found')) {
+          return res.status(404).json({
+            code: 'STREAM_NOT_FOUND',
+            message: `Stream with name "${streamName}" not found.`
+          });
+        }
+        throw error; // Pass other errors to the catch block below
+      }
+    } catch (error) {
+      console.error("Error in StreamController.getStreamStats:", error.message);
+      const statusCode = error.response?.status || 500;
+      const responseMessage = error.isAxiosError 
+        ? (error.response?.data?.message || error.message) 
+        : error.message || "Internal server error";
+        
+      res.status(statusCode).json({
+        code: 'FETCH_STREAM_STATS_ERROR',
+        message: responseMessage
       });
     }
   }

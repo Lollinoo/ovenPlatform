@@ -36,14 +36,13 @@ class OmeService {
   }
   
   /**
-   * Gets the list of active streams with their statistics.
+   * Gets the list of all active streams with their statistics.
    * @returns {Promise<Array>} Array of streams with statistics.
    */
-  async getStreamWithStats() {
+  async getAllActiveStreamsWithStats() {
     try {
       // 1. Get the list of streams
       const streamsResponse = await this.getActiveStreamNames();
-      console.log("Active streams:", streamsResponse);
 
       if (streamsResponse.length === 0) {
         return []; // No active streams
@@ -171,6 +170,84 @@ class OmeService {
         console.error('Thumbnail Fetch Error Status:', error.response.status);
         console.error('Thumbnail Fetch Error Data:', error.response.data ? error.response.data.toString() : 'N/A');
       }
+      throw error; // Re-throw to be handled by the controller
+    }
+  }
+
+  /**
+   * Gets the statistics for a specific stream.
+   * @param {string} streamName - The name of the stream to get statistics for.
+   * @returns {Promise<Object>} Stream statistics object.
+   */
+  async getStreamStats(streamName) {
+    try {
+      if (!streamName || typeof streamName !== 'string') {
+        throw new Error("Invalid stream name provided for stats retrieval");
+      }
+
+      // Normalize the stream name
+      const normalizedStreamName = streamName.trim();
+      
+      // Check if stream exists first
+      const activeStreamNames = await this.getActiveStreamNames();
+      const streamExists = activeStreamNames.some(name => 
+        name.toLowerCase() === normalizedStreamName.toLowerCase()
+      );
+      
+      if (!streamExists) {
+        throw new Error(`Stream '${normalizedStreamName}' not found`);
+      }
+      
+      // Get the stream statistics
+      const statsResponse = await omeAxios.get(
+        `/v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${normalizedStreamName}`
+      );
+      
+      const liveStatsResponse = await omeAxios.get(
+        `/v1/stats/current/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${normalizedStreamName}`
+      );
+      
+      // Extract base response data
+      const statsResponseData = statsResponse?.data?.response || {};
+      const liveStatsResponseData = liveStatsResponse?.data?.response || {};
+      
+      // Extract video information from input.tracks if available
+      let videoInfo = {};
+      if (statsResponseData.input && statsResponseData.input.tracks && statsResponseData.input.tracks.length > 0) {
+        // Look for the first track with video information
+        for (const track of statsResponseData.input.tracks) {
+          if (track.video) {
+            videoInfo = {
+              videoWidth: track.video.width,
+              videoHeight: track.video.height, 
+              videoBitrate: track.video.bitrate,
+              videoFramerate: track.video.framerate
+            };
+            break;
+          }
+        }
+      }
+      
+      // Construct the response with stream name, creation time, and video details
+      return {
+        streamName: normalizedStreamName,
+        createdTime: statsResponseData.input?.createdTime || statsResponseData.createdTime || "",
+        totalConnections: liveStatsResponseData.totalConnections || 0,
+        ...videoInfo,
+      };
+    } catch (error) {
+      console.error(`Error fetching stats for stream ${streamName}:`, error.message);
+      
+      // Enhanced error logging
+      if (error.response) {
+        console.error('OME API Error Status:', error.response.status);
+        console.error('OME API Error Data:', error.response.data);
+      } else if (error.request) {
+        console.error('No response received from OME API:', error.request);
+      } else {
+        console.error('Error setting up request to OME API:', error.message);
+      }
+      
       throw error; // Re-throw to be handled by the controller
     }
   }

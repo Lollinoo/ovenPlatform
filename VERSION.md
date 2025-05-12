@@ -1,6 +1,6 @@
 # OvenPlatform Version
 
-## Current Version: 1.1.2
+## Current Version: 1.1.3
 
 ### Versioning Scheme
 This project follows Semantic Versioning (SemVer):
@@ -13,6 +13,7 @@ This project follows Semantic Versioning (SemVer):
 See CHANGELOG.md for detailed release notes.
 
 ### Version History
+- 1.1.3: Improved stream stats API functionality (2025-05-12)
 - 1.1.2: Simplified environment configuration (2025-05-10)
 - 1.1.1: Fixed environment variable handling for production (2025-05-10)
 - 1.1.0: Enhanced UI/UX with modern design elements (2025-05-10)
