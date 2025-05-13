@@ -1,0 +1,21 @@
+# Development Dockerfile for Next.js application
+# This Dockerfile is optimized for development with hot-reloading
+
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Copy package manifest files and install dependencies
+# This step is separated to leverage Docker layer caching
+COPY package*.json ./
+RUN npm install
+
+# Copy application source code
+# In development, we mount this as a volume to enable hot-reloading
+COPY . .
+
+# Expose the development server port
+EXPOSE 3000
+
+# Start Next.js in development mode with hot-reloading enabled
+CMD ["npm", "run", "dev"]

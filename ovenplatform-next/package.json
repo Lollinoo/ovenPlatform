@@ -4,22 +4,28 @@
   "private": true,
   "scripts": {
     "dev": "next dev --turbopack",
+    "dev:inspect": "NODE_OPTIONS='--inspect' next dev --turbopack",
     "build": "next build",
+    "build:dev": "env-cmd -f .env.development next build",
+    "build:prod": "env-cmd -f .env.production next build",
     "start": "next start",
+    "start:dev": "env-cmd -f .env.development next start",
+    "start:prod": "env-cmd -f .env.production next start",
     "lint": "next lint"
   },
   "dependencies": {
+    "next": "15.3.2",
     "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "15.3.2"
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
-    "typescript": "^5",
+    "@eslint/eslintrc": "^3",
     "@types/node": "^20",
     "@types/react": "^19",
     "@types/react-dom": "^19",
+    "env-cmd": "^10.1.0",
     "eslint": "^9",
     "eslint-config-next": "15.3.2",
-    "@eslint/eslintrc": "^3"
+    "typescript": "^5"
   }
 }

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  # Next.js service for development environment
+  # This service uses hot-reloading for quick development iterations
+  nextjs-dev:
+    build:
+      context: ./ovenplatform-next
+      dockerfile: Dockerfile.dev
+    container_name: oven-nextjs-dev
+    volumes:
+      - ./ovenplatform-next:/app  # Mount source code for hot-reloading
+      - /app/node_modules         # Prevent node_modules from being overwritten
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=development
+    env_file:
+      - ./ovenplatform-next/.env.development
+    networks:
+      - oven-network
+    restart: unless-stopped
+
+  # Next.js service for production environment (simulated)
+  # This service uses the optimized production build
+  nextjs-prod:
+    build:
+      context: ./ovenplatform-next
+      dockerfile: Dockerfile
+    container_name: oven-nextjs-prod
+    ports:
+      - "3001:3000"               # Different port to allow running alongside dev
+    environment:
+      - NODE_ENV=production
+    env_file:
+      - ./ovenplatform-next/.env.production
+    networks:
+      - oven-network
+    restart: unless-stopped
+
+# Shared network for service communication
+networks:
+  oven-network:
+    driver: bridge
