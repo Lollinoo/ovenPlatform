@@ -5,6 +5,22 @@ All notable changes to the OvenPlatform application will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.1.3] - 2025-05-12
+
+### Changed
+- Renamed `getStreamWithStats` function to `getAllActiveStreamsWithStats` for better clarity
+- Improved route naming for stream information endpoints
+- Updated controller method names to better reflect their functionality
+
+### Added
+- New endpoint to get detailed statistics for a specific stream at `/streams/:streamName/stats`
+- New service method `getStreamStats` that retrieves comprehensive data about a stream including:
+  - Video resolution (width/height)
+  - Video bitrate and framerate
+  - Total active connections
+  - Creation time
+- Enhanced error handling with specific error codes for stream stats retrieval
+
 ## [1.1.2] - 2025-05-10
 
 ### Fixed

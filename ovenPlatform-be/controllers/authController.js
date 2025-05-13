@@ -45,7 +45,6 @@ class AuthController {
         .replace(/\+/g, "-")
         .replace(/\//g, "_")
         .replace(/=+$/, "");
-
       if (signature !== calculatedSignature) {
         console.warn(
           `Auth: Invalid X-OME-Signature. Received: ${signature}, Calculated: ${calculatedSignature}`
