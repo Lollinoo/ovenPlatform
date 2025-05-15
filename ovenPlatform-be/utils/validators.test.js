@@ -1,4 +1,4 @@
-const { validateStreamName } = require('./validators');
+import { validateStreamName } from './validators.js';
 
 describe('Stream Name Validation', () => {
   // Casi validi

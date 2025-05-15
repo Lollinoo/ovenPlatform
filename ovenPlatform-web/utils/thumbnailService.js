@@ -200,7 +200,7 @@ export const getThumbnail = async (streamName) => {
     
     // Otherwise, download a new image
     try {
-      const response = await fetch(`/api/v1/streams/${streamName}/thumb.jpg`);
+      const response = await fetch(`/v1/ome/streams/${streamName}/thumb.jpg`);
       
       if (!response.ok) {
         throw new Error(`Error downloading thumbnail: ${response.status}`);

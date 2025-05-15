@@ -1,5 +1,6 @@
-const omeService = require('./omeService');
-const axios = require('axios');
+import { jest } from '@jest/globals';
+import * as omeService from './omeService.js';
+import axios from 'axios';
 
 // Mock axios to prevent actual API calls during tests
 jest.mock('axios');
