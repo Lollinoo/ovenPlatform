@@ -5,6 +5,66 @@ All notable changes to the OvenPlatform application will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.4.1] - 2025-05-15
+
+### Added - frontend
+
+- Enhanced form validation across all authentication components:
+  - Added visual checkmark indicators for valid inputs
+  - Implemented consistent validation messages in English
+  - Added real-time validation feedback for all form fields
+  - Enhanced input field styling with animated validation effects
+  - Applied consistent styling to validation messages across all forms
+  - Fixed duplicate validation indicators in RegisterPage.jsx
+
+### Changed - frontend
+
+- Standardized validation UI elements across all authentication pages:
+  - LoginPage.jsx updated with validation indicators and feedback
+  - RegisterPage.jsx cleaned up with consistent styling
+  - ResetPasswordPage.jsx updated with improved validation messages
+  - All input wrappers now properly position validation indicators
+  - Validation messages now use consistent language and styling
+  - Success and error states are now visually distinct with proper colors
+
+## [1.4.0] - 2025-05-15
+
+### Added - backend
+
+- Improved validation for user data:
+  - Added validation patterns for email, password, and username
+  - Created `validators.js` utility with robust validation functions
+  - Enhanced error handling for validation issues
+  - Added uniqueness checks for email and username fields
+
+### Added - frontend
+
+- Implemented Zod validation for form inputs
+- Added real-time password strength validation with visual indicators
+- Enhanced all authentication forms with comprehensive validation:
+  - Registration form with username, email, and password validation
+  - Login form with input validation
+  - Password reset forms with strength validation
+  - Forgot password form with email validation
+- Updated styling for form validation feedback
+- Added colored borders for valid inputs (green for valid)
+- Added responsive UI with compact design to minimize scrolling
+
+### Changed - backend
+
+- Changed user model from `name` to `username` for better user identification
+- Enhanced password requirements (minimum 8 characters, uppercase, lowercase, number, special character)
+- Improved user authentication error handling and messaging
+
+### Changed - frontend
+
+- Updated `RegisterPage.jsx`, `LoginPage.jsx`, `ResetPasswordPage.jsx`, and `ForgotPasswordPage.jsx` with Zod validation
+- Transformed Auth UI to provide real-time validation feedback
+- Updated authentication forms to use username instead of name field
+- Enhanced UI with modern animations and colors
+- Improved error and success message styling with colored backgrounds
+- Updated password requirements display with grid layout for better space efficiency
+
 ## [1.3.0] - 2025-05-15
 
 ### Changed - backend

@@ -3,7 +3,7 @@ services:
     build:
       context: ../ovenPlatform-be
       dockerfile: Dockerfile.dev
-    image: oven-backend-dev:1.1.3
+    image: oven-backend-dev:1.4.1
     container_name: oven-backend-dev
     ports:
       - "3001:3000"
@@ -17,7 +17,7 @@ services:
     build:
       context: ../ovenPlatform-web
       dockerfile: Dockerfile.dev
-    image: oven-frontend-dev:1.1.3
+    image: oven-frontend-dev:1.4.1
     container_name: oven-frontend-dev
     ports:
       - "8080:8080"
@@ -31,7 +31,7 @@ services:
       - ../ovenPlatform-web/.env.development
     networks:
       - ovendevelop-net
-  
+
 networks:
   ovendevelop-net:
     name: ovendevelop-net

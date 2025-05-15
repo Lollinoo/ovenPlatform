@@ -4,7 +4,7 @@ services:
     build:
       context: ../ovenPlatform-be
       dockerfile: Dockerfile.prod
-    image: oven-backend-prod:1.3.0
+    image: oven-backend-prod:1.4.1
     container_name: oven-backend-prod
     restart: unless-stopped
     ports:
@@ -30,7 +30,7 @@ services:
       dockerfile: Dockerfile.prod
       args:
         - NODE_ENV=production
-    image: oven-frontend-prod:1.3.0
+    image: oven-frontend-prod:1.4.1
     container_name: oven-frontend-prod
     restart: unless-stopped
     ports:
@@ -68,6 +68,5 @@ networks:
   oven-network:
     name: oven-network
     driver: bridge
-
 # volumes:
 #   nginx-logs:

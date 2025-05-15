@@ -1,6 +1,6 @@
 # OvenPlatform Version
 
-## Current Version: 1.1.3
+## Current Version: 1.4.0
 
 ### Versioning Scheme
 
@@ -16,6 +16,7 @@ See CHANGELOG.md for detailed release notes.
 
 ### Version History
 
+- 1.4.1: UI/UX Improvements (2025-05-16)
 - 1.3.0: Added user authentication system (2025-05-15)
 - 1.1.3: Improved stream stats API functionality (2025-05-12)
 - 1.1.2: Simplified environment configuration (2025-05-10)

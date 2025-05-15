@@ -14,7 +14,7 @@ const authService = {
   /**
    * Register a new user
    * @param {Object} userData - User registration data
-   * @param {string} userData.name - User's name
+   * @param {string} userData.username - User's username
    * @param {string} userData.email - User's email
    * @param {string} userData.password - User's password
    * @returns {Promise<Object>} - Response from the server

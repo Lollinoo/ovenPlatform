@@ -7,6 +7,12 @@ import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "../services/emailService.js";
+import {
+  validateUserInput,
+  isValidEmail,
+  isValidPassword,
+  isValidUsername,
+} from "../utils/validators.js";
 
 /**
  * User Authentication Controller
@@ -20,14 +26,33 @@ class UserAuthController {
    */
   async signup(req, res) {
     try {
-      const { email, password, name } = req.body;
+      const { email, password, username } = req.body;
 
-      // Check if user already exists
-      const existingUser = await User.findOne({ email });
-      if (existingUser) {
+      // Validate input
+      const validation = validateUserInput({ email, password, username });
+      if (!validation.isValid) {
+        return res.status(422).json({
+          success: false,
+          message: "Validation failed",
+          errors: validation.errors,
+        });
+      }
+
+      // Check if user with email already exists
+      const existingEmail = await User.findOne({ email });
+      if (existingEmail) {
         return res.status(409).json({
           success: false,
           message: "User with this email already exists",
+        });
+      }
+
+      // Check if username is taken
+      const existingUsername = await User.findOne({ username });
+      if (existingUsername) {
+        return res.status(409).json({
+          success: false,
+          message: "This username is already taken",
         });
       }
 
@@ -45,7 +70,7 @@ class UserAuthController {
       const newUser = new User({
         email,
         password: hashedPassword,
-        name,
+        username,
         verificationToken,
         verificationTokenExpiresAt,
       });
@@ -257,6 +282,15 @@ class UserAuthController {
     try {
       const { token } = req.params;
       const { password } = req.body;
+
+      // Validate password
+      if (!isValidPassword(password)) {
+        return res.status(422).json({
+          success: false,
+          message:
+            "Password must be at least 8 characters long and include uppercase, lowercase, number and special character (!@#$%&)",
+        });
+      }
 
       const user = await User.findOne({
         resetPasswordToken: token,
