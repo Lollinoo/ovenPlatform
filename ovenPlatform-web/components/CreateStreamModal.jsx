@@ -28,7 +28,7 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
     if (isWaiting && streamData) {
       pollingInterval = setInterval(async () => {
         try {
-          const response = await fetch("/api/v1/streams");
+          const response = await fetch("/v1/ome/streams");
           if (!response.ok)
             throw new Error("Error checking stream status");
 
@@ -142,8 +142,8 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
 
       // Post request to create a new stream
       // and get the signed URL
-      // Example: POST /api/v1/streams/generate-signed-url
-      const response = await fetch("/api/v1/streams/generate-signed-url", {
+      // Example: POST /v1/ome/streams/generate-signed-url
+      const response = await fetch("/v1/ome/streams/generate-signed-url", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -315,7 +315,7 @@ function CreateStreamModal({ isOpen, onClose, onCreateStream }) {
                   // If the stream has already been detected, make sure the list is updated
                   if (showSuccess) {
                     // Request a final stream update before closing
-                    fetch("/api/v1/streams")
+                    fetch("/v1/ome/streams")
                       .then(response => {
                         if (response.ok) return response.json();
                         return [];

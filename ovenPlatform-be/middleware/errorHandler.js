@@ -1,4 +1,4 @@
-const config = require("../config"); // Added import for config
+import config from "../config.js"; // Changed to ESM import
 
 /**
  * Centralized error handling middleware.
@@ -48,4 +48,4 @@ const errorHandler = (err, req, res, next) => {
   res.status(statusCode).json(errorResponse);
 };
 
-module.exports = errorHandler;
+export default errorHandler;

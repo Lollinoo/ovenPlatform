@@ -1,5 +1,11 @@
-const dotenv = require("dotenv");
-const path = require("path");
+import dotenv from "dotenv";
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
+// Get directory name in ESM
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Determine .env file path based on NODE_ENV
 // For production, use .env
@@ -10,7 +16,7 @@ dotenv.config({ path: envPath });
 // Fallback to .env.local for development if exists (for local overrides)
 if (process.env.NODE_ENV !== "production") {
   const localEnvPath = path.resolve(__dirname, "./.env.local");
-  if (require("fs").existsSync(localEnvPath)) {
+  if (fs.existsSync(localEnvPath)) {
     dotenv.config({ path: localEnvPath, override: true });
   }
 }
@@ -18,8 +24,36 @@ if (process.env.NODE_ENV !== "production") {
 const config = {
   NodeEnv: process.env.NODE_ENV || "production",
   NodePort: parseInt(process.env.NODE_PORT, 10) || 3000,
-  frontend: {
-    url: process.env.FRONTEND_URL || "http://localhost:3001", // Default to a common dev frontend port
+  app: {
+    frontendUrl: process.env.FRONTEND_URL || "http://localhost:3001", // Default to a common dev frontend port
+  },
+  auth: {
+    jwtSecret: process.env.JWT_SECRET || "your-secret-key-change-in-production",
+    jwtExpiresIn: process.env.JWT_EXPIRES_IN || "24h",
+    cookieMaxAge: 24 * 60 * 60 * 1000, // 24 hours in milliseconds
+  },
+  email: {
+    resendApiKey: process.env.RESEND_API_KEY,
+    senderEmail: process.env.EMAIL_SENDER || "noreply@ovenplatform.com",
+    senderName: process.env.EMAIL_SENDER_NAME || "OvenPlatform Team",
+  },
+  mongodb: {
+    uri: process.env.MONGODB_URI || "mongodb://localhost:27017",
+    dbName: process.env.MONGODB_DB_NAME || "ovenplatform",
+    // Construct the full URI with database name if it's not already included in MONGODB_URI
+    get fullUri() {
+      const mongoUrl = new URL(this.uri);
+      
+      // Check if there's already a path/database name in the URI
+      if (mongoUrl.pathname === "/" || mongoUrl.pathname === "") {
+        // No database name in the URI, add it
+        mongoUrl.pathname = `/${this.dbName}`;
+        return mongoUrl.toString();
+      }
+      
+      // If the URI already has a database name, return as is
+      return this.uri;
+    },
   },
   ome: {
     protocol: process.env.OME_PROTOCOL || "http",
@@ -41,4 +75,5 @@ const config = {
     thumbnailPort: parseInt(process.env.OME_THUMBNAIL_PORT, 10), 
   },
 };
-module.exports = config;
+
+export default config;

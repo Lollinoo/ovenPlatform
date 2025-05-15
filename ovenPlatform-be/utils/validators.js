@@ -63,6 +63,6 @@ const validateStreamName = (streamName) => {
   };
 };
 
-module.exports = {
+export {
   validateStreamName
 };

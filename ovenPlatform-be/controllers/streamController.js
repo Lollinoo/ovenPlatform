@@ -1,9 +1,9 @@
-const omeService = require("../services/omeService");
-const base64url = require("base64url");
-const crypto = require("crypto");
-const config = require("../config");
-const { validateStreamName } = require("../utils/validators");
-const axios = require('axios');
+import omeService from "../services/omeService.js";
+import base64url from "base64url";
+import crypto from "crypto";
+import config from "../config.js";
+import { validateStreamName } from "../utils/validators.js";
+import axios from "axios";
 
 // Axios configuration for OvenMediaEngine (copied from omeService.js for direct API calls)
 const omeAxios = axios.create({
@@ -25,9 +25,14 @@ class StreamController {
     } catch (error) {
       // omeService now handles more detailed logging of OME API errors.
       // Here, we focus on sending a consistent error response to the client.
-      console.error("Error in StreamController.getAllActiveStreamsWithStats:", error.message);
+      console.error(
+        "Error in StreamController.getAllActiveStreamsWithStats:",
+        error.message
+      );
       const statusCode = error.response?.status || 500;
-      const responseMessage = error.isAxiosError ? (error.response?.data?.message || error.message) : "Internal server error";
+      const responseMessage = error.isAxiosError
+        ? error.response?.data?.message || error.message
+        : "Internal server error";
       res.status(statusCode).json({ message: responseMessage });
     }
   }
@@ -42,10 +47,15 @@ class StreamController {
       const { streamName } = req.body;
 
       // Basic presence check
-      if (!streamName || typeof streamName !== 'string' || streamName.trim() === '') {
+      if (
+        !streamName ||
+        typeof streamName !== "string" ||
+        streamName.trim() === ""
+      ) {
         return res.status(400).json({
-          code: 'MISSING_STREAM_NAME',
-          message: "'streamName' is required in the request body and must be a non-empty string."
+          code: "MISSING_STREAM_NAME",
+          message:
+            "'streamName' is required in the request body and must be a non-empty string.",
         });
       }
 
@@ -54,17 +64,20 @@ class StreamController {
       if (!validation.isValid) {
         return res.status(validation.error.status).json({
           code: validation.error.code,
-          message: validation.error.message
+          message: validation.error.message,
         });
       }
 
       // Check if the stream name is already in use
       try {
-        const isStreamInUse = await omeService.isStreamNameInUse(streamName.trim());
+        const isStreamInUse = await omeService.isStreamNameInUse(
+          streamName.trim()
+        );
         if (isStreamInUse) {
-          return res.status(409).json({  // 409 Conflict - indicating a resource conflict
-            code: 'STREAM_NAME_ALREADY_IN_USE',
-            message: `Stream name "${streamName}" is already in use. Please choose a different name.`
+          return res.status(409).json({
+            // 409 Conflict - indicating a resource conflict
+            code: "STREAM_NAME_ALREADY_IN_USE",
+            message: `Stream name "${streamName}" is already in use. Please choose a different name.`,
           });
         }
       } catch (error) {
@@ -73,17 +86,20 @@ class StreamController {
         // 1. Proceed anyway (less safe, might allow duplicates)
         // 2. Reject with an error (safer, prevents potential duplicates)
         return res.status(503).json({
-          code: 'SERVICE_UNAVAILABLE',
-          message: "Unable to verify stream name uniqueness. Please try again later."
+          code: "SERVICE_UNAVAILABLE",
+          message:
+            "Unable to verify stream name uniqueness. Please try again later.",
         });
       }
 
       const HMAC_KEY = config.ome.SignedPolicySecretKey;
       if (!HMAC_KEY) {
-        console.error("SignedPolicySecretKey is not configured. Cannot generate signed URL.");
-        return res.status(500).json({ 
-          code: 'SERVER_CONFIG_ERROR',
-          message: "Server configuration error" 
+        console.error(
+          "SignedPolicySecretKey is not configured. Cannot generate signed URL."
+        );
+        return res.status(500).json({
+          code: "SERVER_CONFIG_ERROR",
+          message: "Server configuration error",
         });
       }
 
@@ -117,18 +133,16 @@ class StreamController {
       const signedUrl =
         policyUrl + "&" + SIGNATURE_QUERY_KEY_NAME + "=" + signature;
 
-      res.json({ 
+      res.json({
         signedUrl,
-        expiresAt: new Date(expirationTimestamp).toISOString() // Include expiration time for frontend
+        expiresAt: new Date(expirationTimestamp).toISOString(), // Include expiration time for frontend
       });
     } catch (error) {
       console.error("Error generating signed URL:", error);
-      res
-        .status(500)
-        .json({ 
-          code: 'INTERNAL_SERVER_ERROR',
-          message: error.message || "Internal server error" 
-        });
+      res.status(500).json({
+        code: "INTERNAL_SERVER_ERROR",
+        message: error.message || "Internal server error",
+      });
     }
   }
 
@@ -142,14 +156,17 @@ class StreamController {
       const activeStreamNames = await omeService.getActiveStreamNames();
       res.json(activeStreamNames);
     } catch (error) {
-      console.error("Error in StreamController.getAllActiveStreams:", error.message);
+      console.error(
+        "Error in StreamController.getAllActiveStreams:",
+        error.message
+      );
       const statusCode = error.response?.status || 500;
-      const responseMessage = error.isAxiosError 
-        ? (error.response?.data?.message || error.message) 
+      const responseMessage = error.isAxiosError
+        ? error.response?.data?.message || error.message
         : "Internal server error";
       res.status(statusCode).json({
-        code: 'FETCH_STREAMS_ERROR',
-        message: responseMessage
+        code: "FETCH_STREAMS_ERROR",
+        message: responseMessage,
       });
     }
   }
@@ -162,12 +179,17 @@ class StreamController {
   async getStreamInfo(req, res) {
     try {
       const { streamName } = req.params;
-      
+
       // Basic presence check
-      if (!streamName || typeof streamName !== 'string' || streamName.trim() === '') {
+      if (
+        !streamName ||
+        typeof streamName !== "string" ||
+        streamName.trim() === ""
+      ) {
         return res.status(400).json({
-          code: 'MISSING_STREAM_NAME',
-          message: "'streamName' URL parameter is required and must be a non-empty string."
+          code: "MISSING_STREAM_NAME",
+          message:
+            "'streamName' URL parameter is required and must be a non-empty string.",
         });
       }
 
@@ -176,7 +198,7 @@ class StreamController {
       if (!validation.isValid) {
         return res.status(validation.error.status).json({
           code: validation.error.code,
-          message: validation.error.message
+          message: validation.error.message,
         });
       }
 
@@ -185,29 +207,34 @@ class StreamController {
         const streamInfo = await omeAxios.get(
           `/v1/stats/current/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${streamName.trim()}`
         );
-        
-        res.json({
-          createdTime: streamInfo.data.response.createdTime,
-          totalConnections: streamInfo.data.response.totalConnections
-        } || {});
+
+        res.json(
+          {
+            createdTime: streamInfo.data.response.createdTime,
+            totalConnections: streamInfo.data.response.totalConnections,
+          } || {}
+        );
       } catch (error) {
         if (error.response && error.response.status === 404) {
           return res.status(404).json({
-            code: 'STREAM_NOT_FOUND',
-            message: `Stream with name "${streamName}" not found.`
+            code: "STREAM_NOT_FOUND",
+            message: `Stream with name "${streamName}" not found.`,
           });
         }
         throw error; // Pass other errors to the catch block below
       }
     } catch (error) {
-      console.error(`Error in StreamController.getStreamInfo for ${req.params.streamName}:`, error.message);
+      console.error(
+        `Error in StreamController.getStreamInfo for ${req.params.streamName}:`,
+        error.message
+      );
       const statusCode = error.response?.status || 500;
-      const responseMessage = error.isAxiosError 
-        ? (error.response?.data?.message || error.message) 
+      const responseMessage = error.isAxiosError
+        ? error.response?.data?.message || error.message
         : "Internal server error";
       res.status(statusCode).json({
-        code: 'FETCH_STREAM_INFO_ERROR',
-        message: responseMessage
+        code: "FETCH_STREAM_INFO_ERROR",
+        message: responseMessage,
       });
     }
   }
@@ -219,12 +246,17 @@ class StreamController {
   async getStreamThumbnail(req, res) {
     try {
       const { streamName } = req.params;
-      
+
       // Basic presence check
-      if (!streamName || typeof streamName !== 'string' || streamName.trim() === '') {
+      if (
+        !streamName ||
+        typeof streamName !== "string" ||
+        streamName.trim() === ""
+      ) {
         return res.status(400).json({
-          code: 'MISSING_STREAM_NAME',
-          message: "'streamName' URL parameter is required and must be a non-empty string."
+          code: "MISSING_STREAM_NAME",
+          message:
+            "'streamName' URL parameter is required and must be a non-empty string.",
         });
       }
 
@@ -233,53 +265,141 @@ class StreamController {
       if (!validation.isValid) {
         return res.status(validation.error.status).json({
           code: validation.error.code,
-          message: validation.error.message
+          message: validation.error.message,
         });
       }
 
       // Check if thumbnail service is configured before attempting to use it
       if (!config.ome.thumbnailHost || isNaN(config.ome.thumbnailPort)) {
-        console.error("StreamController: OME Thumbnail host or port is not configured.");
-        return res.status(503).json({ 
-          code: 'SERVICE_UNAVAILABLE',
-          message: "Thumbnail service is not available or not configured." 
+        console.error(
+          "StreamController: OME Thumbnail host or port is not configured."
+        );
+        return res.status(503).json({
+          code: "SERVICE_UNAVAILABLE",
+          message: "Thumbnail service is not available or not configured.",
         });
       }
 
-      const thumbnailData = await omeService.getStreamThumbnail(streamName.trim());
-      
+      const thumbnailData = await omeService.getStreamThumbnail(
+        streamName.trim()
+      );
+
       // Set the correct content type for the image
-      res.header('Content-Type', 'image/jpeg');
+      res.header("Content-Type", "image/jpeg");
       res.send(thumbnailData);
     } catch (error) {
-      console.error(`Error in StreamController.getStreamThumbnail for ${req.params.streamName}:`, error.message);
+      console.error(
+        `Error in StreamController.getStreamThumbnail for ${req.params.streamName}:`,
+        error.message
+      );
       let statusCode = 500;
-      let responseCode = 'INTERNAL_SERVER_ERROR';
+      let responseCode = "INTERNAL_SERVER_ERROR";
       let responseMessage = "Error fetching stream thumbnail.";
 
       if (error.message === "Thumbnail service is not configured.") {
         statusCode = 503;
-        responseCode = 'SERVICE_UNAVAILABLE';
-        responseMessage = "Thumbnail service is not available or not configured.";
+        responseCode = "SERVICE_UNAVAILABLE";
+        responseMessage =
+          "Thumbnail service is not available or not configured.";
       } else if (error.isAxiosError) {
         statusCode = error.response?.status || 502; // Bad Gateway if OME thumbnail endpoint is down/errors
-        responseCode = 'EXTERNAL_SERVICE_ERROR';
+        responseCode = "EXTERNAL_SERVICE_ERROR";
         // Try to provide a more specific message if available from the error response
         if (statusCode === 404) {
-            responseCode = 'THUMBNAIL_NOT_FOUND';
-            responseMessage = "Thumbnail not found for the specified stream.";
+          responseCode = "THUMBNAIL_NOT_FOUND";
+          responseMessage = "Thumbnail not found for the specified stream.";
         } else {
-            responseMessage = error.response?.data?.message || error.response?.statusText || "Error communicating with thumbnail service.";
+          responseMessage =
+            error.response?.data?.message ||
+            error.response?.statusText ||
+            "Error communicating with thumbnail service.";
         }
-      } else if (error.code === 'ECONNREFUSED'){
+      } else if (error.code === "ECONNREFUSED") {
         statusCode = 503; // Service Unavailable
-        responseCode = 'SERVICE_UNAVAILABLE';
+        responseCode = "SERVICE_UNAVAILABLE";
         responseMessage = "Thumbnail service is currently unavailable.";
       }
-      
-      res.status(statusCode).json({ 
+
+      res.status(statusCode).json({
         code: responseCode,
-        message: responseMessage 
+        message: responseMessage,
+      });
+    }
+  }
+  /**
+
+
+
+   * Gets statistics for a specific stream.
+
+
+   * @param {Object} req - Request object
+
+
+   * @param {Object} res - Response object
+
+
+   */
+
+  async getStreamStats(req, res) {
+    try {
+      const { streamName } = req.params;
+
+      // Basic presence check
+
+      if (
+        !streamName ||
+        typeof streamName !== "string" ||
+        streamName.trim() === ""
+      ) {
+        return res.status(400).json({
+          code: "MISSING_STREAM_NAME",
+
+          message:
+            "'streamName' URL parameter is required and must be a non-empty string.",
+        });
+      }
+
+      // Comprehensive validation with specific rules
+
+      const validation = validateStreamName(streamName);
+
+      if (!validation.isValid) {
+        return res.status(validation.error.status).json({
+          code: validation.error.code,
+
+          message: validation.error.message,
+        });
+      }
+
+      try {
+        const streamStats = await omeService.getStreamStats(streamName.trim());
+
+        res.json(streamStats);
+      } catch (error) {
+        if (error.message && error.message.includes("not found")) {
+          return res.status(404).json({
+            code: "STREAM_NOT_FOUND",
+
+            message: `Stream with name "${streamName}" not found.`,
+          });
+        }
+
+        throw error; // Pass other errors to the catch block below
+      }
+    } catch (error) {
+      console.error("Error in StreamController.getStreamStats:", error.message);
+
+      const statusCode = error.response?.status || 500;
+
+      const responseMessage = error.isAxiosError
+        ? error.response?.data?.message || error.message
+        : error.message || "Internal server error";
+
+      res.status(statusCode).json({
+        code: "FETCH_STREAM_STATS_ERROR",
+
+        message: responseMessage,
       });
     }
   }
@@ -292,12 +412,17 @@ class StreamController {
   async getStreamStats(req, res) {
     try {
       const { streamName } = req.params;
-      
+
       // Basic presence check
-      if (!streamName || typeof streamName !== 'string' || streamName.trim() === '') {
+      if (
+        !streamName ||
+        typeof streamName !== "string" ||
+        streamName.trim() === ""
+      ) {
         return res.status(400).json({
-          code: 'MISSING_STREAM_NAME',
-          message: "'streamName' URL parameter is required and must be a non-empty string."
+          code: "MISSING_STREAM_NAME",
+          message:
+            "'streamName' URL parameter is required and must be a non-empty string.",
         });
       }
 
@@ -306,7 +431,7 @@ class StreamController {
       if (!validation.isValid) {
         return res.status(validation.error.status).json({
           code: validation.error.code,
-          message: validation.error.message
+          message: validation.error.message,
         });
       }
 
@@ -314,10 +439,10 @@ class StreamController {
         const streamStats = await omeService.getStreamStats(streamName.trim());
         res.json(streamStats);
       } catch (error) {
-        if (error.message && error.message.includes('not found')) {
+        if (error.message && error.message.includes("not found")) {
           return res.status(404).json({
-            code: 'STREAM_NOT_FOUND',
-            message: `Stream with name "${streamName}" not found.`
+            code: "STREAM_NOT_FOUND",
+            message: `Stream with name "${streamName}" not found.`,
           });
         }
         throw error; // Pass other errors to the catch block below
@@ -325,16 +450,15 @@ class StreamController {
     } catch (error) {
       console.error("Error in StreamController.getStreamStats:", error.message);
       const statusCode = error.response?.status || 500;
-      const responseMessage = error.isAxiosError 
-        ? (error.response?.data?.message || error.message) 
+      const responseMessage = error.isAxiosError
+        ? error.response?.data?.message || error.message
         : error.message || "Internal server error";
-        
+
       res.status(statusCode).json({
-        code: 'FETCH_STREAM_STATS_ERROR',
-        message: responseMessage
+        code: "FETCH_STREAM_STATS_ERROR",
+        message: responseMessage,
       });
     }
   }
 }
-
-module.exports = new StreamController();
+export default new StreamController();

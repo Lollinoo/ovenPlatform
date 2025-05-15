@@ -69,6 +69,8 @@
 
 .navbar-item {
   margin: 0 var(--spacing-sm);
+  display: flex;
+  align-items: center;
 }
 
 .navbar-link {
@@ -80,6 +82,28 @@
   border-radius: var(--border-radius-small);
   transition: all var(--transition-fast);
   position: relative;
+}
+
+.navbar-user {
+  color: var(--color-text);
+  font-weight: var(--font-weight-medium);
+  margin-right: var(--spacing-sm);
+}
+
+.navbar-logout {
+  background-color: transparent;
+  border: 1px solid var(--color-primary);
+  color: var(--color-primary);
+  border-radius: var(--border-radius-small);
+  padding: 4px 10px;
+  font-size: var(--font-size-sm);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.navbar-logout:hover {
+  background-color: var(--color-primary);
+  color: white;
 }
 
 .navbar-link:after {

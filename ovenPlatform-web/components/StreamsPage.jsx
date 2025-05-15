@@ -21,7 +21,7 @@ function StreamsPage() {
   const fetchStreams = async () => {
     try {
       setLoading(true);
-      const response = await fetch("/api/v1/streams");
+      const response = await fetch("/v1/ome/streams");
       if (!response.ok) {
         throw new Error("Error loading streams");
       }

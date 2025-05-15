@@ -7,7 +7,7 @@ const REFRESH_INTERVAL = 10 * 1000;
 // Function to fetch stream information
 export const fetchStreamInfo = async (streamName) => {
   try {
-    const response = await fetch(`/api/v1/streams/${streamName}/stats`);
+    const response = await fetch(`/v1/ome/streams/${streamName}/stats`);
     if (!response.ok) {
       throw new Error("Error loading stream information");
     }
@@ -23,7 +23,7 @@ export const fetchStreamInfo = async (streamName) => {
 // Function to fetch all stream information
 export const fetchAllStreamsInfo = async () => {
   try {
-    const response = await fetch(`/api/v1/streams`);
+    const response = await fetch(`/v1/ome/streams`);
     if (!response.ok) {
       throw new Error("Error loading stream information");
     }

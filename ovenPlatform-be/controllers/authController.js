@@ -1,6 +1,6 @@
-const crypto = require("crypto");
-const config = require("../config");
-const { validateStreamName } = require("../utils/validators");
+import crypto from "crypto";
+import config from "../config.js";
+import { validateStreamName } from "../utils/validators.js";
 
 // Secret key for HMAC-SHA1 validation
 const OME_API_SECRET_KEY = config.ome.apiSecretKey;
@@ -202,4 +202,4 @@ class AuthController {
   }
 }
 
-module.exports = new AuthController();
+export default new AuthController();

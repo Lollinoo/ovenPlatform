@@ -1,7 +1,7 @@
-const config = require("../config");
+import config from "../config.js";
 
 // Middleware for CORS management
-const allowedOrigin = `${config.frontend.url}`; // Define the allowed origin
+const allowedOrigin = `${config.app.frontendUrl}`; // Define the allowed origin
 
 const enableCors = (req, res, next) => {
   const requestOrigin = req.headers.origin;
@@ -13,6 +13,8 @@ const enableCors = (req, res, next) => {
   // Only allow requests from the configured frontend URL.
   if (requestOrigin === allowedOrigin) {
     res.header('Access-Control-Allow-Origin', allowedOrigin);
+    // Allow credentials (cookies, authorization headers, or TLS client certificates)
+    res.header('Access-Control-Allow-Credentials', 'true');
   } else if (!requestOrigin) {
     // For requests without an Origin header (e.g., server-to-server, or non-CORS requests like curl),
     // it's generally safe to proceed without setting CORS headers, or you might decide
@@ -26,7 +28,9 @@ const enableCors = (req, res, next) => {
   }
 
   res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS, PUT, DELETE');
-  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization, X-OME-Signature');
+  // Allow cookies to be sent with cross-origin requests
+  res.header('Access-Control-Allow-Credentials', 'true');
 
   // Handle OPTIONS (preflight) requests
   if (req.method === 'OPTIONS') {
@@ -38,4 +42,4 @@ const enableCors = (req, res, next) => {
   next();
 };
 
-module.exports = enableCors;
+export default enableCors;

@@ -57,7 +57,7 @@ docker compose --env-file .env.prod -f compose.prod.yaml logs -f
 
 Accedi all'applicazione web:
 - Frontend: http://ovenplatform.local
-- API: http://ovenplatform.local/api/v1/streams
+- API: http://ovenplatform.local/v1/ome/streams
 
 ## Gestione in produzione
 

@@ -1,13 +1,15 @@
 {
   "name": "oven-backend",
-  "version": "1.1.3",
+  "version": "1.3.0",
+  "type": "module",
   "main": "server.js",
   "scripts": {
     "start:dev": "NODE_ENV=development nodemon ./server.js",
     "start:prod": "NODE_ENV=production node ./server.js",
-    "docker-build:dev": "docker build -t oven-backend-dev:1.1.3 -f Dockerfile.dev . ",
-    "docker-build:prod": "docker build -t oven-backend-prod:1.1.3 -f Dockerfile.prod . ",
-    "docker-run:dev": "docker compose -f compose-dev.yaml up -d --force-recreate "
+    "docker-build:dev": "docker build -t oven-backend-dev:1.3.0 -f Dockerfile.dev . ",
+    "docker-build:prod": "docker build -t oven-backend-prod:1.3.0 -f Dockerfile.prod . ",
+    "docker-run:dev": "docker compose -f compose-dev.yaml up -d --force-recreate ",
+    "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
   "keywords": [],
   "author": "",
@@ -16,12 +18,24 @@
   "dependencies": {
     "axios": "^1.9.0",
     "base64url": "^3.0.1",
+    "bcryptjs": "^3.0.2",
+    "cookie-parser": "^1.4.7",
+    "cors": "^2.8.5",
+    "crypto": "^1.0.1",
     "dotenv": "^16.5.0",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
-    "morgan": "^1.10.0"
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^8.14.3",
+    "morgan": "^1.10.0",
+    "resend": "^4.5.1"
   },
   "devDependencies": {
+    "jest": "^29.7.0",
     "nodemon": "^3.1.10"
+  },
+  "jest": {
+    "transform": {},
+    "testEnvironment": "node"
   }
 }
