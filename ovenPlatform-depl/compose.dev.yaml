@@ -1,18 +1,7 @@
 services:
-  oven-backend-dev:
-    build:
-      context: ../ovenPlatform-be
-      dockerfile: Dockerfile.dev
-    image: oven-backend-dev:1.5.0
-    container_name: oven-backend-dev
-    ports:
-      - "3001:3000"
-    volumes:
-      - ../ovenPlatform-be:/app
-      - /app/node_modules
-    networks:
-      - ovendevelop-net
-
+  #########
+  #########  FRONTEND
+  #########
   oven-frontend-dev:
     build:
       context: ../ovenPlatform-web
@@ -31,11 +20,103 @@ services:
       - ../ovenPlatform-web/.env.development
     networks:
       - ovendevelop-net
+  #########
+  #########  BACKEND
+  #########
+  oven-backend-dev:
+    build:
+      context: ../ovenPlatform-be
+      dockerfile: Dockerfile.dev
+    image: oven-backend-dev:1.5.0
+    container_name: oven-backend-dev
+    restart: always
+    ports:
+      - "3001:3000"
+    volumes:
+      - ../ovenPlatform-be:/app
+      - /app/node_modules
+    networks:
+      - ovendevelop-net
+      - mongodevelop-net
+    env_file:
+      - ../ovenPlatform-be/.env.development
+    depends_on:
+      ct-mongodb-dev:
+        condition: service_healthy
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+      - mongo_db_name
+  #########
+  ######### MONGODB INSTANCE
+  #########
+  ct-mongodb-dev:
+    hostname: ct-mongodb-dev
+    image: mongo:latest
+    container_name: ct-mongodb-dev
+    restart: always
+    ports:
+      - "27017:27017"
+    networks:
+      - mongodevelop-net
+    volumes:
+      - mongodb_data_dev:/data/db # Volume persistente per i dati
+    env_file:
+      - ./mongo.env.development
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 5s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
 
+  # MongoDB database initialization
+  ct-mongodb-init-dev:
+    hostname: ct-mongodb-init-dev
+    container_name: ct-mongodb-init-dev
+    image: mongo:latest
+    restart: "no"
+    depends_on:
+      ct-mongodb-dev:
+        condition: service_healthy
+    env_file:
+      - ./mongo.env.development
+    networks:
+      - mongodevelop-net
+    command: >
+      bash -c "
+        echo 'Waiting for MongoDB to start...' &&
+        sleep 5 &&
+        mongosh --host ct-mongodb-dev:27017 -u $$(cat /run/secrets/mongo_root_username) -p $$(cat /run/secrets/mongo_root_password) --authenticationDatabase admin --eval '
+          db = db.getSiblingDB(\"$$(cat /run/secrets/mongo_db_name)\");
+          print(\"Database $$(cat /run/secrets/mongo_db_name) created.\");
+        '
+      "
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+      - mongo_db_name
 networks:
   ovendevelop-net:
     name: ovendevelop-net
-    driver: bridge
     ipam:
       config:
         - subnet: 172.16.20.0/27
+  mongodevelop-net:
+    name: mongodevelop-net
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.20.32/27
+
+volumes:
+  mongodb_data_dev:
+    name: mongodb_data_dev
+
+secrets:
+  mongo_root_username:
+    file: ./secrets/mongo_root_username.txt
+  mongo_root_password:
+    file: ./secrets/mongo_root_password.txt
+  mongo_db_name:
+    file: ./secrets/mongo_db_name.txt

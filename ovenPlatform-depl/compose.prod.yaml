@@ -1,5 +1,7 @@
 services:
-  # Backend Service
+  #########
+  #########  BACKEND
+  #########
   oven-backend-prod:
     build:
       context: ../ovenPlatform-be
@@ -14,16 +16,34 @@ services:
       - PORT=3000
     env_file:
       - ../ovenPlatform-be/.env
-    # healthcheck:
-    #   test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/v1/ome/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 3
-    #   start_period: 10s
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/v1/status",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
     networks:
       - oven-network
+      - mongo-network
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+      - mongo_db_name
 
-  # Frontend Service
+  #########
+  #########  FRONTEND
+  #########
   oven-frontend-prod:
     build:
       context: ../ovenPlatform-web
@@ -40,12 +60,14 @@ services:
     env_file:
       - ../ovenPlatform-web/.env
     depends_on:
-      - oven-backend-prod
-        # condition: service_healthy
+      oven-backend-prod:
+        condition: service_healthy
     networks:
       - oven-network
 
-  # Proxy Service (Nginx)
+  #########
+  #########  PROXY (NGINX)
+  #########
   # oven-proxy:
   #   image: nginx:1.25-alpine
   #   container_name: oven-proxy
@@ -59,14 +81,91 @@ services:
   #     - ./nginx/certs:/etc/nginx/certs:ro
   #     - ./nginx/logs:/var/log/nginx
   #   depends_on:
-  #     - oven-frontend
-  #     - oven-backend
+  #     - oven-frontend-prod
+  #     - oven-backend-prod
   #   networks:
   #     - oven-network
+
+  #########
+  #########  MONGODB PRIMARY
+  #########
+  mongodb:
+    hostname: mongodb
+    image: mongo:latest
+    container_name: mongodb
+    restart: always
+    volumes:
+      - mongodb_data:/data/db
+      - mongodb_config:/data/configdb
+    env_file:
+      - ./mongo.env
+    ports:
+      - "27017:27017"
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - mongo-network
+    command: >
+      --bind_ip_all
+      --auth
+
+  #########
+  #########  MONGODB INITIALIZATION
+  #########
+  mongodb-init:
+    hostname: mongodb-init
+    image: mongo:latest
+    container_name: mongodb-init
+    restart: "no"
+    depends_on:
+      mongodb:
+        condition: service_healthy
+    networks:
+      - mongo-network
+    command: >
+      bash -c "
+        echo 'Waiting for MongoDB to start...' &&
+        sleep 10 &&
+        mongosh --host mongodb:27017 -u $$(cat /run/secrets/mongo_root_username) -p $$(cat /run/secrets/mongo_root_password) --authenticationDatabase admin --eval '
+          db = db.getSiblingDB(\"$$(cat /run/secrets/mongo_db_name)\");
+          print(\"Database $$(cat /run/secrets/mongo_db_name) created or already exists\");
+        '
+      "
+    secrets:
+      - mongo_root_username
+      - mongo_root_password
+      - mongo_db_name
 
 networks:
   oven-network:
     name: oven-network
     driver: bridge
-# volumes:
-#   nginx-logs:
+    ipam:
+      config:
+        - subnet: 172.16.10.0/27
+  mongo-network:
+    name: mongo-network
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.16.10.32/27
+
+volumes:
+  mongodb_data:
+    name: mongodb_data_prod
+  mongodb_config:
+    name: mongodb_config_prod
+  nginx-logs:
+    name: nginx_logs_prod
+
+secrets:
+  mongo_root_username:
+    file: ./secrets/prod/mongo_root_username.txt
+  mongo_root_password:
+    file: ./secrets/prod/mongo_root_password.txt
+  mongo_db_name:
+    file: ./secrets/prod/mongo_db_name.txt
