@@ -15,7 +15,8 @@ const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
  * - 1 number
  * - 1 special character
  */
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%&])[A-Za-z\d!@#$%&]{8,}$/;
+const passwordRegex =
+  /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%&])[A-Za-z\d!@#$%&]{8,}$/;
 
 /**
  * Username validation regex pattern
@@ -25,51 +26,68 @@ const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%&])[A-Za-z\d!@#
 const usernameRegex = /^[a-zA-Z0-9_]{3,30}$/;
 
 const userSchema = new mongoose.Schema(
-	{
-		email: {
-			type: String,
-			required: [true, 'Email address is required'],
-			unique: true,
-			lowercase: true,
-			trim: true,
-			validate: {
-				validator: function(v) {
-					return emailRegex.test(v);
-				},
-				message: props => `${props.value} is not a valid email address`
-			}
-		},
-		password: {
-			type: String,
-			required: [true, 'Password is required'],
-			// Note: Password validation happens before hashing in the controller
-		},
-		username: {
-			type: String,
-			required: [true, 'Username is required'],
-			unique: true,
-			trim: true,
-			validate: {
-				validator: function(v) {
-					return usernameRegex.test(v);
-				},
-				message: props => `${props.value} is not a valid username. Use 3-30 alphanumeric characters and underscores only.`
-			}
-		},
-		lastLogin: {
-			type: Date,
-			default: Date.now,
-		},
-		isVerified: {
-			type: Boolean,
-			default: false,
-		},
-		resetPasswordToken: String,
-		resetPasswordExpiresAt: Date,
-		verificationToken: String,
-		verificationTokenExpiresAt: Date,
-	},
-	{ timestamps: true }
+  {
+    email: {
+      type: String,
+      required: [true, "Email address is required"],
+      unique: true,
+      lowercase: true,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return emailRegex.test(v);
+        },
+        message: (props) => `${props.value} is not a valid email address`,
+      },
+    },
+    password: {
+      type: String,
+      required: [true, "Password is required"],
+      // Note: Password validation happens before hashing in the controller
+    },
+    username: {
+      type: String,
+      required: [true, "Username is required"],
+      unique: true,
+      trim: true,
+      validate: {
+        validator: function (v) {
+          return usernameRegex.test(v);
+        },
+        message: (props) =>
+          `${props.value} is not a valid username. Use 3-30 alphanumeric characters and underscores only.`,
+      },
+    },
+    lastLogin: {
+      type: Date,
+      default: Date.now,
+    },
+    isVerified: {
+      type: Boolean,
+      default: false,
+    },
+    rtmpUrl: {
+      type: String,
+      default: null,
+    },
+    rtmpUrlExpiresAt: {
+      type: Date,
+      default: null,
+    },
+    resetPasswordToken: String,
+    resetPasswordExpiresAt: Date,
+    verificationToken: String,
+    verificationTokenExpiresAt: Date,
+    pendingEmail: String,
+    emailChangeToken: String,
+    emailChangeTokenExpiresAt: Date,
+    pendingUsername: String,
+    usernameChangeToken: String,
+    usernameChangeTokenExpiresAt: Date,
+    lastUsernameChangeAt: Date,
+    lastRtmpRegeneratedAt: Date,
+  },
+  { timestamps: true }
 );
 
 export const User = mongoose.model("User", userSchema);

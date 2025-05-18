@@ -1,5 +1,6 @@
 import express from "express";
 import UserAuthController from "../controllers/userAuthController.js";
+import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
@@ -14,5 +15,10 @@ router.post("/verify-email", UserAuthController.verifyEmail);
 router.post("/forgot-password", UserAuthController.forgotPassword);
 router.post("/reset-password/:token", UserAuthController.resetPassword);
 router.get("/profile", UserAuthController.getCurrentUser); // Get current user data
+router.post(
+  "/regenerate-rtmp-url",
+  authMiddleware,
+  UserAuthController.regenerateRtmpUrl
+);
 
 export default router;

@@ -1,18 +1,22 @@
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import crypto from "crypto";
+import base64url from "base64url";
 import { User } from "../schemas/user.model.js";
 import config from "../config.js";
 import {
   sendVerificationEmail,
   sendPasswordResetEmail,
 } from "../services/emailService.js";
+import generateLongLivedRtmpUrl from "../utils/rtmpUrlGenerator.js";
 import {
   validateUserInput,
   isValidEmail,
   isValidPassword,
   isValidUsername,
 } from "../utils/validators.js";
+
+// La funzione generateLongLivedRtmpUrl è stata spostata in rtmpUrlGenerator.js
 
 /**
  * User Authentication Controller
@@ -208,17 +212,43 @@ class UserAuthController {
         });
       }
 
-      // Update user verification status
-      user.isVerified = true;
-      user.verificationToken = undefined;
-      user.verificationTokenExpiresAt = undefined;
+      // Generate a long-lived RTMP URL using the username as streamName
+      try {
+        const { signedUrl, expiresAt } = await generateLongLivedRtmpUrl(
+          user.username
+        );
 
-      await user.save();
+        // Update user with RTMP URL and other verification details
+        user.rtmpUrl = signedUrl;
+        user.rtmpUrlExpiresAt = expiresAt;
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpiresAt = undefined;
 
-      res.status(200).json({
-        success: true,
-        message: "Email verified successfully. You can now login.",
-      });
+        await user.save();
+
+        res.status(200).json({
+          success: true,
+          message: "Email verified successfully. You can now login.",
+          rtmpUrl: signedUrl,
+          rtmpUrlExpiresAt: expiresAt,
+        });
+      } catch (error) {
+        console.error("Error generating RTMP URL:", error);
+
+        // Even if RTMP URL generation fails, still verify the user
+        user.isVerified = true;
+        user.verificationToken = undefined;
+        user.verificationTokenExpiresAt = undefined;
+
+        await user.save();
+
+        res.status(200).json({
+          success: true,
+          message:
+            "Email verified successfully, but RTMP URL generation failed. You can now login.",
+        });
+      }
     } catch (error) {
       console.error("Error in verifyEmail:", error);
       res.status(500).json({
@@ -359,19 +389,127 @@ class UserAuthController {
         });
       }
 
-      // Return user data
+      // Return user data including RTMP URL information
       res.status(200).json({
         id: user._id,
         name: user.name,
         email: user.email,
+        username: user.username,
         isVerified: user.isVerified,
         lastLogin: user.lastLogin,
+        rtmpUrl: user.rtmpUrl,
+        rtmpUrlExpiresAt: user.rtmpUrlExpiresAt,
       });
     } catch (error) {
       console.error("Error getting current user:", error);
       res.status(401).json({
         success: false,
         message: "Invalid authentication token",
+      });
+    }
+  }
+
+  /**
+   * Generate signed URL for RTMP streaming
+   * @param {Object} req - Request object containing stream key
+   * @param {Object} res - Response object
+   */
+  async generateRtmpSignedUrl(req, res) {
+    try {
+      const { streamKey } = req.body;
+
+      // Validate stream key
+      if (!streamKey) {
+        return res.status(400).json({
+          success: false,
+          message: "Stream key is required",
+        });
+      }
+
+      // Find user by stream key
+      const user = await User.findOne({ "streaming.streamKey": streamKey });
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Generate signed URL
+      const expiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour
+      const signature = base64url.encode(
+        crypto
+          .createHmac("sha256", config.rtmp.secret)
+          .update(`${streamKey}:${expiry}`)
+          .digest("hex")
+      );
+
+      const signedUrl = `rtmp://${config.rtmp.host}/${config.rtmp.app}/${streamKey}?token=${signature}&expires=${expiry}`;
+
+      res.status(200).json({
+        success: true,
+        url: signedUrl,
+      });
+    } catch (error) {
+      console.error("Error generating RTMP signed URL:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while generating RTMP signed URL",
+      });
+    }
+  }
+
+  // La funzione generateLongLivedRtmpUrl è stata spostata fuori dalla classe
+
+  /**
+   * Regenerate a user's RTMP URL
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async regenerateRtmpUrl(req, res) {
+    try {
+      // Get user from request (set by authMiddleware)
+      const userId = req.user.id;
+
+      // Find the user
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({
+          success: false,
+          message: "User not found",
+        });
+      }
+
+      // Check if user is verified
+      if (!user.isVerified) {
+        return res.status(403).json({
+          success: false,
+          message: "User must verify email before getting an RTMP URL",
+        });
+      }
+
+      // Generate a new long-lived RTMP URL
+      const { signedUrl, expiresAt } = await generateLongLivedRtmpUrl(
+        user.username
+      );
+
+      // Update user with new RTMP URL
+      user.rtmpUrl = signedUrl;
+      user.rtmpUrlExpiresAt = expiresAt;
+      await user.save();
+
+      // Return the new RTMP URL
+      res.status(200).json({
+        success: true,
+        rtmpUrl: signedUrl,
+        rtmpUrlExpiresAt: expiresAt,
+        message: "RTMP URL regenerated successfully",
+      });
+    } catch (error) {
+      console.error("Error regenerating RTMP URL:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while regenerating RTMP URL",
       });
     }
   }

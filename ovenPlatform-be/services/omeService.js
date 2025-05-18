@@ -302,6 +302,53 @@ class OmeService {
       throw error; // Re-throw to be handled by the controller
     }
   }
+
+  /**
+   * Termina uno stream attivo tramite l'API di OvenMediaEngine
+   * @param {String} streamName - Nome dello stream da terminare
+   * @returns {Promise<Object>} - Risposta dall'API di OME
+   */
+  async terminateStream(streamName) {
+    try {
+      if (!streamName || typeof streamName !== "string") {
+        throw new Error("Invalid stream name provided for termination");
+      }
+
+      // Normalizza il nome dello stream
+      const normalizedStreamName = streamName.trim();
+
+      // Verifica se lo stream esiste prima
+      const activeStreamNames = await this.getActiveStreamNames();
+      const streamExists = activeStreamNames.some(
+        (name) => name.toLowerCase() === normalizedStreamName.toLowerCase()
+      );
+
+      if (!streamExists) {
+        throw new Error(`Stream '${normalizedStreamName}' not found`);
+      }
+
+      // Invia la richiesta DELETE per terminare lo stream
+      const response = await omeAxios.delete(
+        `/v1/vhosts/${config.ome.vhostName}/apps/${config.ome.appName}/streams/${normalizedStreamName}`
+      );
+
+      return response?.data || { status: "stream terminated" };
+    } catch (error) {
+      console.error(`Error terminating stream ${streamName}:`, error.message);
+
+      // Log dettagliato degli errori
+      if (error.response) {
+        console.error("OME API Error Status:", error.response.status);
+        console.error("OME API Error Data:", error.response.data);
+      } else if (error.request) {
+        console.error("No response received from OME API:", error.request);
+      } else {
+        console.error("Error setting up request to OME API:", error.message);
+      }
+
+      throw error; // Rilancia l'errore per essere gestito dal controller
+    }
+  }
 }
 
 export default new OmeService();

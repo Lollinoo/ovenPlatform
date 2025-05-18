@@ -4,6 +4,9 @@ import crypto from "crypto";
 import config from "../config.js";
 import { validateStreamName } from "../utils/validators.js";
 import axios from "axios";
+import streamService from "../services/streamService.js";
+import { User } from "../schemas/user.model.js";
+import { Stream } from "../schemas/stream.model.js";
 
 // Axios configuration for OvenMediaEngine (copied from omeService.js for direct API calls)
 const omeAxios = axios.create({
@@ -340,70 +343,6 @@ class StreamController {
 
 
    */
-
-  async getStreamStats(req, res) {
-    try {
-      const { streamName } = req.params;
-
-      // Basic presence check
-
-      if (
-        !streamName ||
-        typeof streamName !== "string" ||
-        streamName.trim() === ""
-      ) {
-        return res.status(400).json({
-          code: "MISSING_STREAM_NAME",
-
-          message:
-            "'streamName' URL parameter is required and must be a non-empty string.",
-        });
-      }
-
-      // Comprehensive validation with specific rules
-
-      const validation = validateStreamName(streamName);
-
-      if (!validation.isValid) {
-        return res.status(validation.error.status).json({
-          code: validation.error.code,
-
-          message: validation.error.message,
-        });
-      }
-
-      try {
-        const streamStats = await omeService.getStreamStats(streamName.trim());
-
-        res.json(streamStats);
-      } catch (error) {
-        if (error.message && error.message.includes("not found")) {
-          return res.status(404).json({
-            code: "STREAM_NOT_FOUND",
-
-            message: `Stream with name "${streamName}" not found.`,
-          });
-        }
-
-        throw error; // Pass other errors to the catch block below
-      }
-    } catch (error) {
-      console.error("Error in StreamController.getStreamStats:", error.message);
-
-      const statusCode = error.response?.status || 500;
-
-      const responseMessage = error.isAxiosError
-        ? error.response?.data?.message || error.message
-        : error.message || "Internal server error";
-
-      res.status(statusCode).json({
-        code: "FETCH_STREAM_STATS_ERROR",
-
-        message: responseMessage,
-      });
-    }
-  }
-
   /**
    * Gets statistics for a specific stream.
    * @param {Object} req - Request object
@@ -460,5 +399,244 @@ class StreamController {
       });
     }
   }
+  /**
+   * Ottiene tutti gli stream registrati nel database
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getRegisteredStreams(req, res) {
+    try {
+      // Solo gli amministratori possono vedere tutte le stream registrate
+      const adminRole = req.user?.role === "admin";
+
+      if (!adminRole) {
+        return res.status(403).json({
+          success: false,
+          message: "Unauthorized: Admin privileges required",
+        });
+      }
+
+      const streams = await Stream.find().populate(
+        "userId",
+        "username email isVerified"
+      );
+
+      res.status(200).json({
+        success: true,
+        streams,
+      });
+    } catch (error) {
+      console.error("Error fetching registered streams:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching registered streams",
+      });
+    }
+  }
+
+  /**
+   * Gets the status of a specific stream by username
+   */
+  async getStreamStatus(req, res) {
+    try {
+      const { username } = req.params;
+
+      // Check if the username exists and stream is active in our database
+      const streamRecord = await Stream.findOne({ username });
+
+      if (!streamRecord) {
+        return res.status(404).json({
+          success: false,
+          message: "Stream not found",
+        });
+      }
+
+      // Check if the stream is active in OME
+      let isActuallyActive = false;
+      try {
+        const activeStreams = await omeService.getActiveStreamNames();
+        isActuallyActive = activeStreams.includes(username);
+
+        // If database says stream is active but OME says it's inactive,
+        // update the database record
+        if (streamRecord.isActive && !isActuallyActive) {
+          await streamService.deactivateStream(username);
+          streamRecord.isActive = false;
+        }
+      } catch (err) {
+        console.error("Error checking stream status in OME:", err);
+      }
+
+      res.json({
+        success: true,
+        data: {
+          username,
+          isActive: streamRecord.isActive && isActuallyActive,
+          lastStreamStartedAt: streamRecord.lastStreamStartedAt,
+          lastStreamEndedAt: streamRecord.lastStreamEndedAt,
+          streamSessionId: streamRecord.streamSessionId,
+        },
+      });
+    } catch (error) {
+      console.error("Error in getStreamStatus:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+  /**
+   * Gets all streams with their database details
+   */
+  async getAllStreamsWithDetails(req, res) {
+    try {
+      // Get all streams from database
+      const streams = await Stream.find({});
+
+      res.json(streams);
+    } catch (error) {
+      console.error("Error in getAllStreamsWithDetails:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+  /**
+   * Gets stream information for the current authenticated user
+   */
+  async getUserStream(req, res) {
+    try {
+      const userId = req.user._id;
+
+      // Find the user's stream in the database
+      const streamRecord = await Stream.findOne({ userId });
+
+      if (!streamRecord) {
+        return res.json({
+          success: true,
+          data: null,
+        });
+      }
+
+      // If stream is marked as active, verify with OME that it really is
+      if (streamRecord.isActive) {
+        try {
+          const activeStreams = await omeService.getActiveStreamNames();
+
+          // If not actually active in OME, update our database
+          if (!activeStreams.includes(streamRecord.username)) {
+            await streamService.deactivateStream(streamRecord.username);
+            streamRecord.isActive = false;
+            streamRecord.streamSessionId = null;
+          }
+        } catch (err) {
+          console.error("Error verifying stream active status with OME:", err);
+        }
+      }
+
+      res.json({
+        success: true,
+        data: streamRecord,
+      });
+    } catch (error) {
+      console.error("Error in getUserStream:", error);
+      res.status(500).json({
+        success: false,
+        message: "Internal server error",
+      });
+    }
+  }
+
+  /**
+   * Termina uno stream attivo
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async terminateStream(req, res) {
+    try {
+      const { streamId } = req.params;
+      const userId = req.user._id;
+
+      // Find the stream record
+      const streamRecord = await Stream.findOne({
+        streamSessionId: streamId,
+        userId,
+      });
+
+      if (!streamRecord) {
+        return res.status(404).json({
+          success: false,
+          message:
+            "Stream not found or you don't have permission to terminate it",
+        });
+      }
+
+      if (!streamRecord.isActive) {
+        return res.status(400).json({
+          success: false,
+          message: "Stream is not active",
+        });
+      }
+
+      // Terminate the stream through OME
+      await omeService.terminateStream(streamRecord.username);
+
+      // Update the stream record
+      await streamService.deactivateStream(streamRecord.username);
+
+      res.json({
+        success: true,
+        message: "Stream terminated successfully",
+      });
+    } catch (error) {
+      console.error("Error in terminateStream:", error);
+      res.status(500).json({
+        success: false,
+        message: "Failed to terminate stream",
+      });
+    }
+  }
+
+  /**
+   * Ottiene tutte le informazioni sugli stream attivi combinando OME e il DB
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getActiveStreamsDetails(req, res) {
+    try {
+      // Ottieni stream attivi dal nostro database
+      const dbActiveStreams = await streamService.getActiveStreams();
+
+      // Ottieni stream attivi da OME
+      const omeActiveStreams = await omeService.getAllActiveStreams();
+
+      // Combina le informazioni
+      const combinedStreams = dbActiveStreams.map((dbStream) => {
+        const omeStream = omeActiveStreams.find(
+          (ome) => ome.name === dbStream.username
+        );
+
+        return {
+          ...dbStream._doc,
+          omeStats: omeStream || null,
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        streams: combinedStreams,
+      });
+    } catch (error) {
+      console.error("Error fetching combined active streams:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching active streams details",
+      });
+    }
+  }
 }
+
 export default new StreamController();

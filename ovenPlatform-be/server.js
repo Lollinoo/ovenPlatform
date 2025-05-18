@@ -7,6 +7,7 @@ import errorHandler from "./middleware/errorHandler.js";
 import streamRoutes from "./routes/streamRoutes.js";
 import authRoutes from "./routes/authRoutes.js";
 import userAuthRoutes from "./routes/userAuthRoutes.js";
+import profileRoutes from "./routes/profileRoutes.js";
 
 const app = express();
 const PORT = config.NodePort;
@@ -43,6 +44,7 @@ app.use(enableCors);
 app.use("/v1/ome/streams", streamRoutes);
 app.use("/v1/ome", authRoutes); // Routes for OvenMediaEngine connection
 app.use("/v1/auth", userAuthRoutes); // Routes for user authentication
+app.use("/v1/profile", profileRoutes); // Routes for user profile management
 
 // Debug endpoint
 app.get("/v1/status", (req, res) => {

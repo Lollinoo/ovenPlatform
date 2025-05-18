@@ -27,7 +27,7 @@ function Navbar() {
         <div className="navbar-logo">
           <Link to="/">OvenPlatform</Link>
           <div className="version-badge">
-            v{packageJson.version} 
+            v{packageJson.version}
             <span className={config.app.isProduction ? "env-prod" : "env-dev"}>
               {config.app.isProduction ? "PROD" : "DEV"}
             </span>
@@ -41,21 +41,33 @@ function Navbar() {
         <ul className={`navbar-menu ${isOpen ? "active" : ""}`}>
           {isAuthenticated && (
             <li className="navbar-item">
-              <Link to="/streams" className="navbar-link" onClick={() => setIsOpen(false)}>
+              <Link
+                to="/streams"
+                className="navbar-link"
+                onClick={() => setIsOpen(false)}
+              >
                 Streams
               </Link>
             </li>
           )}
-          
+
           {!isAuthenticated ? (
             <>
               <li className="navbar-item">
-                <Link to="/login" className="navbar-link" onClick={() => setIsOpen(false)}>
+                <Link
+                  to="/login"
+                  className="navbar-link"
+                  onClick={() => setIsOpen(false)}
+                >
                   Login
                 </Link>
               </li>
               <li className="navbar-item">
-                <Link to="/register" className="navbar-link" onClick={() => setIsOpen(false)}>
+                <Link
+                  to="/register"
+                  className="navbar-link"
+                  onClick={() => setIsOpen(false)}
+                >
                   Sign Up
                 </Link>
               </li>
@@ -64,8 +76,17 @@ function Navbar() {
             <>
               <li className="navbar-item">
                 <span className="navbar-user">
-                  {currentUser?.name || currentUser?.email || 'User'}
+                  {currentUser?.username || currentUser?.email || "User"}
                 </span>
+              </li>
+              <li className="navbar-item">
+                <Link
+                  to="/profile"
+                  className="navbar-link"
+                  onClick={() => setIsOpen(false)}
+                >
+                  Profile
+                </Link>
               </li>
               <li className="navbar-item">
                 <button className="navbar-logout" onClick={handleLogout}>

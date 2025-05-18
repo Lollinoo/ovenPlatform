@@ -157,6 +157,178 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // Update username
+  const updateUsername = async (newUsername, password) => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await authService.updateUsername(newUsername, password);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update username");
+      }
+
+      return {
+        success: true,
+        message: response.message,
+        nextAllowedDate: response.nextAllowedDate,
+      };
+    } catch (err) {
+      setError(err.message || "Failed to update username. Please try again.");
+      return { success: false, message: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm username change
+  const confirmUsernameChange = async (token) => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await authService.confirmUsernameChange(token);
+
+      if (!response.success) {
+        throw new Error(
+          response.message || "Failed to confirm username change"
+        );
+      }
+
+      // Refresh the user data to get updated username and RTMP URL
+      const userData = await authService.getCurrentUser();
+      setCurrentUser((prevState) => ({
+        ...userData,
+        rtmpUrl: response.rtmpUrl || userData.rtmpUrl,
+        rtmpUrlExpiresAt:
+          response.rtmpUrlExpiresAt || userData.rtmpUrlExpiresAt,
+        lastRtmpRegeneratedAt: new Date(), // Aggiorna anche la data di rigenerazione
+      }));
+
+      return {
+        success: true,
+        message: response.message,
+        rtmpUrl: response.rtmpUrl,
+        rtmpUrlExpiresAt: response.rtmpUrlExpiresAt,
+      };
+    } catch (err) {
+      setError(
+        err.message || "Failed to confirm username change. Please try again."
+      );
+      return { success: false, message: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update email
+  const updateEmail = async (newEmail, password) => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await authService.updateEmail(newEmail, password);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to update email");
+      }
+
+      return { success: true, message: response.message };
+    } catch (err) {
+      setError(err.message || "Failed to update email. Please try again.");
+      return { success: false, message: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Change password
+  const changePassword = async (currentPassword, newPassword) => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await authService.changePassword(
+        currentPassword,
+        newPassword
+      );
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to change password");
+      }
+
+      return { success: true, message: response.message };
+    } catch (err) {
+      setError(err.message || "Failed to change password. Please try again.");
+      return { success: false, message: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Regenerate RTMP URL
+  const regenerateRtmpUrl = async () => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await authService.regenerateRtmpUrl();
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to regenerate RTMP URL");
+      }
+
+      // Update current user data with new RTMP URL
+      setCurrentUser((prevState) => ({
+        ...prevState,
+        rtmpUrl: response.rtmpUrl,
+        rtmpUrlExpiresAt: response.rtmpUrlExpiresAt,
+        lastRtmpRegeneratedAt: new Date(),
+      }));
+
+      return {
+        success: true,
+        message: response.message,
+        rtmpUrl: response.rtmpUrl,
+        rtmpUrlExpiresAt: response.rtmpUrlExpiresAt,
+        nextAllowedDate: response.nextAllowedDate,
+      };
+    } catch (err) {
+      setError(
+        err.message || "Failed to regenerate RTMP URL. Please try again."
+      );
+      return {
+        success: false,
+        message: err.message,
+        nextAllowedDate: err.nextAllowedDate,
+      };
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Confirm email change
+  const confirmEmailChange = async (token) => {
+    try {
+      setLoading(true);
+      setError("");
+      const response = await authService.confirmEmailChange(token);
+
+      if (!response.success) {
+        throw new Error(response.message || "Failed to confirm email change");
+      }
+
+      // Refresh the user data to get updated email
+      const userData = await authService.getCurrentUser();
+      setCurrentUser(userData);
+
+      return { success: true, message: response.message };
+    } catch (err) {
+      setError(
+        err.message || "Failed to confirm email change. Please try again."
+      );
+      return { success: false, message: err.message };
+    } finally {
+      setLoading(false);
+    }
+  };
+
   // Context value
   const value = {
     currentUser,
@@ -168,6 +340,12 @@ export const AuthProvider = ({ children }) => {
     forgotPassword,
     resetPassword,
     verifyEmail,
+    updateUsername,
+    updateEmail,
+    changePassword,
+    regenerateRtmpUrl,
+    confirmEmailChange,
+    confirmUsernameChange,
     isAuthenticated: !!currentUser,
   };
 

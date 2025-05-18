@@ -110,17 +110,17 @@ const validateStreamName = (streamName) => {
     };
   }
 
-  // Check minimum length (8 characters)
-  if (streamName.length < 8) {
-    return {
-      isValid: false,
-      error: {
-        code: "STREAM_NAME_TOO_SHORT",
-        message: "Stream name must be at least 8 characters long.",
-        status: 422, // Unprocessable Entity
-      },
-    };
-  }
+  // // Check minimum length (8 characters)
+  // if (streamName.length < 8) {
+  //   return {
+  //     isValid: false,
+  //     error: {
+  //       code: "STREAM_NAME_TOO_SHORT",
+  //       message: "Stream name must be at least 8 characters long.",
+  //       status: 422, // Unprocessable Entity
+  //     },
+  //   };
+  // }
 
   // Check for spaces
   if (/\s/.test(streamName)) {
