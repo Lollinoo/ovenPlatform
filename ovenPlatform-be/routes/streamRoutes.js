@@ -17,6 +17,7 @@ router.get("/active", streamController.getAllActiveStreams);
 router.get("/registered", streamController.getRegisteredStreams);
 router.get("/active-details", streamController.getActiveStreamsDetails);
 router.get("/details", streamController.getAllStreamsWithDetails);
+router.get("/stats", streamController.getAllStreamsStats);
 router.get("/my-stream", streamController.getUserStream);
 router.post("/:streamId/terminate", streamController.terminateStream);
 router.get("/status/:username", streamController.getStreamStatus);

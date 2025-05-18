@@ -9,6 +9,7 @@ import {
   sendPasswordResetEmail,
 } from "../services/emailService.js";
 import generateLongLivedRtmpUrl from "../utils/rtmpUrlGenerator.js";
+import streamService from "../services/streamService.js";
 import {
   validateUserInput,
   isValidEmail,
@@ -226,6 +227,22 @@ class UserAuthController {
         user.verificationTokenExpiresAt = undefined;
 
         await user.save();
+
+        // Crea o aggiorna il record dello stream nella collezione Stream
+        try {
+          const streamRecord = await streamService.createOrUpdateStream(
+            user._id,
+            user.username,
+            signedUrl,
+            expiresAt
+          );
+          console.log(
+            `Stream record created/updated for user ${user.username}`
+          );
+        } catch (streamError) {
+          console.error("Error creating stream record:", streamError);
+          // Continuiamo comunque anche se la creazione del record stream fallisce
+        }
 
         res.status(200).json({
           success: true,
@@ -497,6 +514,19 @@ class UserAuthController {
       user.rtmpUrl = signedUrl;
       user.rtmpUrlExpiresAt = expiresAt;
       await user.save();
+
+      // Aggiorna anche il record nella collezione Stream
+      try {
+        await streamService.createOrUpdateStream(
+          user._id,
+          user.username,
+          signedUrl,
+          expiresAt
+        );
+        console.log(`Stream record updated for user ${user.username}`);
+      } catch (streamError) {
+        console.error("Error updating stream record:", streamError);
+      }
 
       // Return the new RTMP URL
       res.status(200).json({

@@ -1,5 +1,7 @@
 import axios from "axios";
 import config from "../config.js";
+import streamService from "./streamService.js";
+
 // Axios configuration for OvenMediaEngine
 const omeAxios = axios.create({
   baseURL: `${config.ome.protocol}://${config.ome.host}:${config.ome.port}`,
@@ -7,7 +9,91 @@ const omeAxios = axios.create({
   timeout: config.ome.requestTimeout, // Added timeout from config
 });
 
+// Intervallo di monitoraggio in ms (configurabile da config.js)
+const MONITORING_INTERVAL = config.ome.monitoringInterval || 30000;
+let monitoringInterval = null;
+
 class OmeService {
+  constructor() {
+    // Avvia il monitoraggio automatico degli stream se configurato
+    if (config.ome.enableStreamMonitoring !== false) {
+      this.startStreamMonitoring();
+    }
+  }
+
+  /**
+   * Avvia il monitoraggio periodico degli stream
+   */
+  startStreamMonitoring() {
+    if (monitoringInterval) {
+      clearInterval(monitoringInterval);
+    }
+
+    console.log("Starting automatic stream monitoring...");
+
+    // Esegui immediatamente un primo controllo
+    this.monitorStreams();
+
+    // Programma controlli periodici
+    monitoringInterval = setInterval(
+      () => this.monitorStreams(),
+      MONITORING_INTERVAL
+    );
+  }
+
+  /**
+   * Ferma il monitoraggio degli stream
+   */
+  stopStreamMonitoring() {
+    if (monitoringInterval) {
+      clearInterval(monitoringInterval);
+      monitoringInterval = null;
+      console.log("Stream monitoring stopped");
+    }
+  }
+
+  /**
+   * Monitora gli stream attivi e aggiorna il database
+   */
+  async monitorStreams() {
+    try {
+      console.log("Running stream monitoring check...");
+
+      // 1. Ottieni elenco degli stream attivi da OME
+      const activeStreamNames = await this.getActiveStreamNames();
+
+      // 2. Ottieni elenco degli stream nel DB contrassegnati come attivi
+      const dbActiveStreams = await streamService.getActiveStreams();
+
+      // 3. Controlla stream segnati come attivi nel DB ma non più attivi in OME
+      for (const dbStream of dbActiveStreams) {
+        if (!activeStreamNames.includes(dbStream.username)) {
+          console.log(
+            `Stream ${dbStream.username} no longer active in OME, updating database...`
+          );
+
+          // Aggiorna il DB per segnalare lo stream come non più attivo
+          await streamService.deactivateStream(dbStream.username);
+        }
+      }
+
+      // 4. Per ogni stream attivo, aggiorna i dati statistici
+      for (const streamName of activeStreamNames) {
+        try {
+          const streamStats = await this.getStreamStats(streamName);
+
+          // Aggiorna le statistiche dello stream nel database
+          await streamService.updateStreamStats(streamName, streamStats);
+          console.log(`Updated stats for stream ${streamName}`);
+        } catch (err) {
+          console.error(`Error updating stats for stream ${streamName}:`, err);
+        }
+      }
+    } catch (error) {
+      console.error("Error during stream monitoring:", error);
+    }
+  }
+
   /**
    * Gets the list of active stream names.
    * @returns {Promise<Array<string>>} Array of active stream names.

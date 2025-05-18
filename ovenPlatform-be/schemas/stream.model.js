@@ -43,6 +43,23 @@ const streamSchema = new mongoose.Schema(
       required: true,
       index: true,
     },
+    // Campi statistici
+    viewers: {
+      type: Number,
+      default: 0,
+    },
+    videoBitrate: {
+      type: Number,
+      default: 0,
+    },
+    videoResolution: {
+      type: String,
+      default: null,
+    },
+    lastUpdatedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );

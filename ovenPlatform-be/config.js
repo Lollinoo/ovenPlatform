@@ -10,7 +10,10 @@ const __dirname = path.dirname(__filename);
 // Determine .env file path based on NODE_ENV
 // For production, use .env
 // For development, use .env.development
-const envPath = path.resolve(__dirname, process.env.NODE_ENV === "production" ? "./.env" : "./.env.development");
+const envPath = path.resolve(
+  __dirname,
+  process.env.NODE_ENV === "production" ? "./.env" : "./.env.development"
+);
 dotenv.config({ path: envPath });
 
 // Fallback to .env.local for development if exists (for local overrides)
@@ -43,14 +46,14 @@ const config = {
     // Construct the full URI with database name if it's not already included in MONGODB_URI
     get fullUri() {
       const mongoUrl = new URL(this.uri);
-      
+
       // Check if there's already a path/database name in the URI
       if (mongoUrl.pathname === "/" || mongoUrl.pathname === "") {
         // No database name in the URI, add it
         mongoUrl.pathname = `/${this.dbName}`;
         return mongoUrl.toString();
       }
-      
+
       // If the URI already has a database name, return as is
       return this.uri;
     },
@@ -65,14 +68,19 @@ const config = {
       password: process.env.OME_AUTH_PASSWORD || "admin",
     },
     vhostName: process.env.OME_VHOST_NAME || "default", // Default VHost in OME
-    appName: process.env.OME_APP_NAME || "app",       // Default App in OME
-    apiSecretKey: process.env.OME_API_SECRET_KEY, // For X-OME-Signature 
-    SignedPolicySecretKey: process.env.SIGNED_POLICY_SECRET_KEY, // For signing policies 
-    signedUrlExpiresInSeconds: parseInt(process.env.SIGNED_URL_EXPIRES_IN_SECONDS, 10) || 180, // Default 3 minutes
+    appName: process.env.OME_APP_NAME || "app", // Default App in OME
+    apiSecretKey: process.env.OME_API_SECRET_KEY, // For X-OME-Signature
+    SignedPolicySecretKey: process.env.SIGNED_POLICY_SECRET_KEY, // For signing policies
+    signedUrlExpiresInSeconds:
+      parseInt(process.env.SIGNED_URL_EXPIRES_IN_SECONDS, 10) || 180, // Default 3 minutes
     requestTimeout: parseInt(process.env.OME_REQUEST_TIMEOUT, 10) || 5000, // Default 5 seconds for OME API calls
     thumbnailProtocol: process.env.OME_THUMBNAIL_PROTOCOL || "https",
-    thumbnailHost: process.env.OME_THUMBNAIL_HOST, 
-    thumbnailPort: parseInt(process.env.OME_THUMBNAIL_PORT, 10), 
+    thumbnailHost: process.env.OME_THUMBNAIL_HOST,
+    thumbnailPort: parseInt(process.env.OME_THUMBNAIL_PORT, 10),
+    enableStreamMonitoring:
+      process.env.OME_ENABLE_STREAM_MONITORING !== "false", // Enabled by default unless explicitly disabled
+    monitoringInterval:
+      parseInt(process.env.OME_MONITORING_INTERVAL, 10) || 30000, // Default 30 seconds
   },
 };
 

@@ -5,6 +5,38 @@ All notable changes to the OvenPlatform application will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.5.0] - 2025-05-18
+
+### Added - backend
+
+- Comprehensive RTMP stream management system:
+  - Automated periodic monitoring of active streams with configurable intervals
+  - New monitoring routes for admin users:
+    - POST `/v1/monitoring/check-streams`: Manual monitoring check
+    - POST `/v1/monitoring/restart-monitoring`: Restart monitoring system
+  - New stream statistics API endpoint: GET `/v1/ome/streams/stats`
+  - Enhanced stream model with additional statistics fields:
+    - `viewers`: Track number of current viewers
+    - `videoBitrate`: Track stream bitrate
+    - `videoResolution`: Track stream resolution
+    - `lastUpdatedAt`: Track when stats were last updated
+  - Configuration options for monitoring in `config.js`:
+    - `enableStreamMonitoring`: Enable/disable automatic monitoring
+    - `monitoringInterval`: Configure monitoring frequency
+
+### Fixed - backend
+
+- Fixed Stream collection population during email verification
+- Fixed RTMP URL regeneration to properly update Stream records
+- Enhanced error handling in stream service methods
+- Improved synchronization between OME active streams and database
+
+### Changed - backend
+
+- Enhanced `streamService.updateStreamStats()` to handle various stat formats
+- Improved `omeService.monitorStreams()` to update stream statistics
+- Updated stream controller to provide more comprehensive stream information
+
 ## [1.4.1] - 2025-05-15
 
 ### Added - frontend

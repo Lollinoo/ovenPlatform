@@ -170,6 +170,83 @@ class StreamService {
       throw error;
     }
   }
+
+  /**
+   * Aggiorna le statistiche di uno stream nel database
+   * @param {String} streamName - Nome dello stream (username)
+   * @param {Object} stats - Statistiche dello stream da OME
+   * @returns {Promise<Object>} - Oggetto stream aggiornato
+   */
+  async updateStreamStats(streamName, stats) {
+    try {
+      if (!streamName) {
+        console.error("updateStreamStats: Stream name is required");
+        return null;
+      }
+
+      if (!stats || typeof stats !== "object") {
+        console.error(
+          `updateStreamStats: Invalid stats object for stream ${streamName}`
+        );
+        return null;
+      }
+
+      // Trova lo stream nel database
+      const stream = await Stream.findOne({
+        username: streamName,
+        isActive: true,
+      });
+
+      if (!stream) {
+        console.warn(
+          `Stream ${streamName} non trovato nel database o non attivo`
+        );
+        return null;
+      }
+
+      // Prepara i dati da aggiornare
+      const updateData = {
+        lastUpdatedAt: new Date(),
+      };
+
+      // Aggiungi dati statistici se disponibili
+      if (stats.totalConnections !== undefined) {
+        updateData.viewers = stats.totalConnections;
+      }
+
+      // Gestisce i casi in cui il bitrate è direttamente nell'oggetto stats
+      if (stats.videoBitrate !== undefined) {
+        updateData.videoBitrate = stats.videoBitrate;
+      }
+      // Oppure proviene da un oggetto video annidato
+      else if (stats.video && stats.video.bitrate) {
+        updateData.videoBitrate = stats.video.bitrate;
+      }
+
+      // Gestisce vari modi in cui la risoluzione può essere fornita
+      if (stats.videoWidth && stats.videoHeight) {
+        updateData.videoResolution = `${stats.videoWidth}x${stats.videoHeight}`;
+      }
+
+      // Logga le statistiche che stiamo aggiornando
+      console.log(`Updating stats for ${streamName}:`, updateData);
+
+      // Aggiorna lo stream nel database
+      const updatedStream = await Stream.findOneAndUpdate(
+        { username: streamName, isActive: true },
+        { $set: updateData },
+        { new: true }
+      );
+
+      return updatedStream;
+    } catch (error) {
+      console.error(
+        `Errore nell'aggiornamento delle statistiche dello stream ${streamName}:`,
+        error
+      );
+      throw error;
+    }
+  }
 }
 
 export default new StreamService();

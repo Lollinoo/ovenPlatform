@@ -611,12 +611,12 @@ class StreamController {
       const dbActiveStreams = await streamService.getActiveStreams();
 
       // Ottieni stream attivi da OME
-      const omeActiveStreams = await omeService.getAllActiveStreams();
+      const omeActiveStreams = await omeService.getAllActiveStreamsWithStats();
 
       // Combina le informazioni
       const combinedStreams = dbActiveStreams.map((dbStream) => {
         const omeStream = omeActiveStreams.find(
-          (ome) => ome.name === dbStream.username
+          (ome) => ome.streamName === dbStream.username
         );
 
         return {
@@ -634,6 +634,59 @@ class StreamController {
       res.status(500).json({
         success: false,
         message: "An error occurred while fetching active streams details",
+      });
+    }
+  }
+
+  /**
+   * Ottiene tutte le statistiche degli stream registrati
+   * @param {Object} req - Request object
+   * @param {Object} res - Response object
+   */
+  async getAllStreamsStats(req, res) {
+    try {
+      // Ottieni tutti gli stream registrati
+      const allStreams = await Stream.find();
+
+      // Ottieni gli stream attivi da OME con le statistiche
+      const omeActiveStreamsWithStats =
+        await omeService.getAllActiveStreamsWithStats();
+
+      // Mappa delle statistiche per username
+      const statsMap = new Map();
+      omeActiveStreamsWithStats.forEach((stream) => {
+        statsMap.set(stream.streamName, stream);
+      });
+
+      // Combina le informazioni
+      const streamsWithStats = allStreams.map((stream) => {
+        const omeStats = statsMap.get(stream.username) || null;
+
+        return {
+          id: stream._id,
+          username: stream.username,
+          isActive: stream.isActive,
+          lastStreamStartedAt: stream.lastStreamStartedAt,
+          lastStreamEndedAt: stream.lastStreamEndedAt,
+          viewers: stream.viewers,
+          videoBitrate: stream.videoBitrate,
+          videoResolution: stream.videoResolution,
+          lastUpdatedAt: stream.lastUpdatedAt,
+          omeStats: omeStats,
+        };
+      });
+
+      res.status(200).json({
+        success: true,
+        count: streamsWithStats.length,
+        activeCount: omeActiveStreamsWithStats.length,
+        streams: streamsWithStats,
+      });
+    } catch (error) {
+      console.error("Error fetching all streams stats:", error);
+      res.status(500).json({
+        success: false,
+        message: "An error occurred while fetching all streams stats",
       });
     }
   }
