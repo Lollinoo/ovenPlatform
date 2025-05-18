@@ -1,13 +1,13 @@
 {
   "name": "oven-backend",
-  "version": "1.4.1",
+  "version": "1.5.0",
   "type": "module",
   "main": "server.js",
   "scripts": {
     "start:dev": "NODE_ENV=development nodemon ./server.js",
     "start:prod": "NODE_ENV=production node ./server.js",
-    "docker-build:dev": "docker build -t oven-backend-dev:1.4.1 -f Dockerfile.dev . ",
-    "docker-build:prod": "docker build -t oven-backend-prod:1.4.1 -f Dockerfile.prod . ",
+    "docker-build:dev": "docker build -t oven-backend-dev:1.5.0 -f Dockerfile.dev . ",
+    "docker-build:prod": "docker build -t oven-backend-prod:1.5.0 -f Dockerfile.prod . ",
     "docker-run:dev": "docker compose -f compose-dev.yaml up -d --force-recreate ",
     "test": "NODE_OPTIONS=--experimental-vm-modules jest"
   },
